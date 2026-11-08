@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>teach-me — העברת הנתונים</title>
+<script src="firebase-bridge.js"></script>
+<style>
+body{font-family:-apple-system,Heebo,Arial,sans-serif;background:#FBF6EC;color:#2E3A59;margin:0;padding:24px 18px;line-height:1.6;}
+.box{max-width:480px;margin:0 auto;background:#fff;border:2px solid #E7DFCC;border-radius:20px;padding:22px 18px;text-align:center;}
+h1{font-size:24px;margin:0 0 6px;}
+label.btn{display:block;margin:18px 0 8px;padding:18px;border-radius:16px;background:#7A55C8;color:#fff;font-size:20px;font-weight:800;cursor:pointer;}
+#msg{min-height:28px;font-size:17px;font-weight:700;margin-top:10px;white-space:pre-line;}
+.bar{height:12px;background:#EFE7D6;border-radius:99px;overflow:hidden;margin-top:12px;}
+.bar i{display:block;height:100%;width:0;background:#3FA79A;transition:width .2s;}
+a{color:#7A55C8;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>📦 העברת הנתונים</h1>
+  <p>בוחרים את הקובץ <b>teach-me-data.json</b> ששלחתי לך.<br>כל התשובות, תאריכי הבחינות והפודיום עוברים לאפליקציה החדשה.</p>
+  <label class="btn" for="f">📂 לבחור את הקובץ</label>
+  <input type="file" id="f" accept=".json,application/json" style="display:none">
+  <div class="bar"><i id="bar"></i></div>
+  <div id="msg"></div>
+  <p id="done" style="display:none"><a href="./">✓ לפתוח את teach-me</a></p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+$('f').onchange=async()=>{
+  const file=$('f').files[0]; if(!file) return;
+  const msg=$('msg'); msg.textContent='קורא את הקובץ…';
+  let J; try{ J=JSON.parse(await file.text()); }catch(e){ msg.textContent='❌ זה לא הקובץ הנכון.'; return; }
+  const cols=J.collections||[]; let total=0; cols.forEach(c=>total+=(c.docs||[]).length);
+  if(!total){ msg.textContent='❌ אין נתונים בקובץ.'; return; }
+  msg.textContent='מתחבר לענן…';
+  const db=await window.claude.use('db');
+  if(!db){ msg.textContent='❌ אין חיבור לענן. בודקים שיש אינטרנט ומנסים שוב.'; return; }
+  let n=0, bad=0;
+  for(const c of cols){
+    for(const d of (c.docs||[])){
+      try{ await db.doc(c.col+'/'+d.id).set(d.data); }catch(e){ bad++; }
+      n++; $('bar').style.width=Math.round(100*n/total)+'%';
+      msg.textContent='מעביר… '+n+' מתוך '+total;
+    }
+  }
+  msg.textContent=bad?('הסתיים, אבל '+bad+' פריטים לא עברו. אפשר לבחור את הקובץ שוב.'):'✓ הכול עבר! '+total+' פריטים.';
+  $('done').style.display='';
+};
+</script>
+</body>
+</html>
