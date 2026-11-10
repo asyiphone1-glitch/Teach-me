@@ -1470,10 +1470,10 @@ html.vocab-only #doll-mini,html.vocab-only .doll-panel,html.vocab-only .ms-write
     </div>
     <div id="hr-check" style="display:none">
       <h2 class="hr-h">סיימת! 🎉 עכשיו בודקות</h2>
-      <button type="button" class="hr-photo" id="hr-photo" onclick="document.getElementById('hr-cam').click()">📸 מצלמים את הדף<span>ינשופי בודק לבד</span></button>
+      <button type="button" class="hr-photo" id="hr-photo" style="display:none" onclick="document.getElementById('hr-cam').click()">📸 מצלמים את הדף<span>ינשופי בודק לבד</span></button>
       <input type="file" id="hr-cam" accept="image/*" capture="environment" style="display:none" onchange="hrPhoto(this)">
       <div class="hr-photo-msg" id="hr-photo-msg"></div>
-      <p class="hr-tip" id="hr-check-tip">או בודקות לבד: לכל מילה ✓ נכון או ✗ טעיתי</p>
+      <p class="hr-tip" id="hr-check-tip">בודקות לבד: לכל מילה ✓ נכון או ✗ טעיתי</p>
       <div id="hr-list"></div>
       <button type="button" class="hr-next" id="hr-done" onclick="hrFinish()">סיימתי לבדוק ✓</button>
     </div>

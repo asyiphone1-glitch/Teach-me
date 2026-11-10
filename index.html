@@ -4401,7 +4401,7 @@ EXAMS.roni.push({id:'roni-torah-bereshit-1',subj:'torah',type:'bereshit',title:'
 /* 4.11.2026: בחינה בחשבון לרוני ולהילי ב-12.11 — עוד אין חומר; כשיעלה חומר הוא ייכנס לבחינה הזאת */
 EXAMS.roni.push({id:'roni-math-1112',subj:'math',type:'up',title:'בחינה בחשבון',added:'2026-11-04'});
 EXAMS.hili.push({id:'hili-math-1112',subj:'math',type:'up',title:'בחינה בחשבון',added:'2026-11-04'});
-const LINK_DICT='https://claude.ai/code/artifact/a059335c-e88c-4bc0-94bd-6a58f78f648f';
+const LINK_DICT='dictation.html';
 function archGet(){ try{ return JSON.parse(lsGet('rh_archived')||'{}')||{}; }catch(e){ return {}; } }
 function isArch(ex){ const a=archGet(); if(a[ex.id]===1) return true; if(a[ex.id]===0) return false; return !!ex.archived; }
 function setArch(id,v){ const a=archGet(); a[id]=v?1:0; lsSet('rh_archived',JSON.stringify(a)); }
@@ -10739,7 +10739,7 @@ const AV_WEEKS=[
   function kidHtml(){
     const s=syncInfo(), nm=(typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name)||'';
     if(s.k==='off') return '<b>📵 '+(nm?nm+', ':'')+'אין חיבור לאינטרנט כרגע</b><br>מה שאת מתרגלת נשמר בטלפון, ויישלח לאבא ואמא לבד כשהאינטרנט יחזור. 🙂';
-    if(s.k==='ro') return '<b>📵 '+(nm?nm+', ':'')+'הטלפון מחובר, אבל לא שומר</b><br>הוא מחובר לחשבון'+(SY.who?' של <span class="sy-n"></span>':' אחר')+', ולא לחשבון של אבא.<br>לכן מה שאת מתרגלת נשמר רק פה.<br>תבקשי מאבא לחבר את הטלפון לחשבון שלו. 🙏';
+    if(s.k==='ro') return '<b>📵 '+(nm?nm+', ':'')+'הענן לא שומר כרגע</b><br>מה שאת מתרגלת נשמר בטלפון ולא הולך לאיבוד. הוא יישלח לבד כשזה יסתדר.<br>תספרי לאבא. 🙏';
     return '';
   }
   function syPaint(){
@@ -10762,13 +10762,12 @@ const AV_WEEKS=[
       const who=SY.who?('מחובר עכשיו: '+SY.who+(SY.owner?' (החשבון שלך ✓)':'')):'';
       if(s.k==='ok'||s.k==='wait'){ if(who){ const p=document.createElement('div'); p.className='rp-note'; p.textContent=who; st.after(p); } return; }
       const f=document.createElement('div'); f.className='sy-fix';
-      if(s.k==='ro'&&SY.why==='perm'){
-        f.innerHTML='<b>למה זה קורה:</b> הטלפון הזה מחובר לחשבון Claude'+(SY.who?' של <b class="sy-n"></b>':' אחר')+' — לא לחשבון שיצר את האפליקציה. לחשבון אחר יש רק הרשאת צפייה, אז הוא לא יכול לשמור.'+
-          '<br><b>איך מתקנים (פעם אחת לכל טלפון):</b><ol><li>בטלפון של הילדה פותחים את claude.ai בדפדפן (או את אפליקציית Claude).</li><li>מתנתקים מהחשבון שמחובר שם.</li><li>מתחברים עם <b>החשבון שלך</b> — אותו מייל שאיתו אתה מדבר עם Claude.</li><li>פותחים שוב את הקישור של הילדה. למעלה יופיע "☁️ שומר אצל אבא ואמא ✓".</li></ol>'+
-          '<div class="rp-note">כל מה שתרגלה עד עכשיו בטלפון הזה לא הולך לאיבוד — הוא יישלח לבד ברגע שהטלפון יתחבר נכון. בינתיים אפשר להעביר אותו בכפתור 📤.</div>';
-        const n=f.querySelector('.sy-n'); if(n) n.textContent=SY.who;
+      if(s.k==='ro'){
+        f.innerHTML='<b>למה זה קורה:</b> Firebase לא מאשר לשמור. בדרך כלל זה קורה כשכללי האבטחה של המסד פגו או נעולים.'+
+          '<br><b>איך מתקנים:</b><ol><li>מצלמים את המסך הזה.</li><li>שולחים אותו ל-Claude בצ׳אט של teach-me.</li></ol>'+
+          '<div class="rp-note">כל מה שתורגל בטלפון הזה לא הולך לאיבוד. הוא יישלח לבד כשהשמירה תחזור, ובינתיים אפשר להעביר אותו בכפתור 📤.</div>';
       } else {
-        f.innerHTML='<b>איך מתקנים:</b><ol><li>בטלפון הזה מתחברים ל-claude.ai עם החשבון שלך (או פותחים מתוך אפליקציית Claude).</li><li>פותחים שוב את הקישור.</li></ol><div class="rp-note">מה שתורגל עד עכשיו בטלפון הזה יישלח לבד אחרי החיבור.</div>';
+        f.innerHTML='<b>איך מתקנים:</b><ol><li>בודקים שיש בטלפון אינטרנט (Wi-Fi או סלולר).</li><li>סוגרים את teach-me ופותחים שוב.</li></ol><div class="rp-note">מה שתורגל עד עכשיו בטלפון הזה יישלח לבד כשהחיבור יחזור.</div>';
       }
       st.after(f);
     }catch(e){}
