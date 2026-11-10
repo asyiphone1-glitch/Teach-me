@@ -1,0 +1,30 @@
+{
+ "name": "teach-me · זיו",
+ "short_name": "זיו",
+ "id": "./?kid=ziv",
+ "start_url": "./#k-i23qVfGxLw",
+ "scope": "./",
+ "lang": "he",
+ "dir": "rtl",
+ "display": "standalone",
+ "background_color": "#FBF6EC",
+ "theme_color": "#1F55B8",
+ "icons": [
+  {
+   "src": "icon-ziv-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-ziv-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-ziv-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

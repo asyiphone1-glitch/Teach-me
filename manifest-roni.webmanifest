@@ -1,0 +1,30 @@
+{
+ "name": "teach-me · רוני",
+ "short_name": "רוני",
+ "id": "./?kid=roni",
+ "start_url": "./#k-CZEr1YwzQB",
+ "scope": "./",
+ "lang": "he",
+ "dir": "rtl",
+ "display": "standalone",
+ "background_color": "#FBF6EC",
+ "theme_color": "#B8235A",
+ "icons": [
+  {
+   "src": "icon-roni-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-roni-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-roni-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

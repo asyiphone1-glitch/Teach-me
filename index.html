@@ -8,6 +8,11 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>/* 10.11.2026: טלפון של ילדה — אייקון אישי עם הדמות שלה במסך הבית */
+(function(){try{var L=localStorage.getItem('tm_lock');if(['aviv','roni','hili','ziv'].indexOf(L)<0)return;
+document.querySelector('link[rel=manifest]').href='manifest-'+L+'.webmanifest';
+document.querySelector('link[rel=apple-touch-icon]').href='apple-touch-icon-'+L+'.png';
+document.querySelector('link[rel=icon]').href='icon-'+L+'-192.png';}catch(e){}})();</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -5013,7 +5018,7 @@ function mExam(fresh){
 function mGames(){
   mStop(); MS.screen='sub-games'; mSetTitle('⏱️ משחקי זמן'); const b=MS.st.best;
   const R=(k,ic,t,s,best)=>'<button type="button" class="m-row" data-g="'+k+'"><span class="ic">'+ic+'</span><span class="tx"><b>'+t+'</b><small>'+s+'</small></span>'+(best!=null?'<span class="pc">🏆 '+best+'</span>':'')+'</button>';
-  let h='<div class="m-h">ככל שתפתרי מהר יותר — הציון גבוה יותר!</div>'+
+  let h='<div class="m-h">מהר יותר = יותר נקודות!</div>'+
     R('sprint','⚡','ספרינט 10','10 תרגילים. עונה נכון ומהר? מקבלת יותר נקודות',b.sprint)+
     R('race','🏁','מרוץ של דקה','יש לך דקה. כל תשובה נכונה = נקודה. עונה מהר? מקבלת עוד ⭐',b.race)+
     R('line','📏','איפה השבר גר?','לוחצים איפה השבר נמצא על הקו. יש לך 45 שניות',b.line)+
@@ -5049,7 +5054,7 @@ function mRace(){
 function mLine(){
   mStop(); MS.screen='game'; MS.back=mGames; mSetTitle('📏 איפה השבר גר?');
   let score=0, streak=0, right=0, over=false; const end=Date.now()+45000;
-  const body=mEl('mBody'); body.innerHTML='<div class="m-hud"><span>⭐ <b id="mSc">0</b></span><span id="mSt"></span></div><div class="m-card"><div class="m-ins">בין אילו שלמים נמצא השבר? לחצי על הקטע הנכון בציר</div><div class="mexp" dir="ltr" id="mLf"></div><div dir="ltr" id="mLsvg"></div><div class="m-fb" id="mLfb"></div></div>';
+  const body=mEl('mBody'); body.innerHTML='<div class="m-hud"><span>⭐ <b id="mSc">0</b></span><span id="mSt"></span></div><div class="m-card"><div class="m-ins">בין אילו שלמים? לחצי על הציר</div><div class="mexp" dir="ltr" id="mLf"></div><div dir="ltr" id="mLsvg"></div><div class="m-fb" id="mLfb"></div></div>';
   const tEl=mEl('mTimer');
   const finish=()=>{ if(over) return; over=true; mGameEnd('line',score,[right+' שברים במקום הנכון'],mLine); };
   mI(()=>{ const s=Math.max(0,Math.ceil((end-Date.now())/1000)); tEl.textContent='⏱️ '+s; tEl.classList.toggle('hot',s<=10); if(s<=0) finish(); },200);
@@ -5078,7 +5083,7 @@ function mBuilder(){
   mI(()=>{ const s=Math.max(0,Math.ceil((end-Date.now())/1000)); tEl.textContent='⏱️ '+s; tEl.classList.toggle('hot',s<=10); if(s<=0) finish(); },200);
   const draw=msg=>{ if(over) return;
     const slot=k=>sel[k]!=null?sel[k]:'<span style="color:var(--muted)">?</span>';
-    body.innerHTML='<div class="m-hud"><span>⭐ <b>'+score+'</b></span><span>'+total()+' / 12</span></div><div class="m-card"><div class="m-ins">לחצי על ספרה למונה, ואז על ספרה אחרת למכנה. אחר כך — מייני את השבר.<small>יש 12 שברים אפשריים מהספרות האלה. מצאי כמה שיותר!</small></div>'+
+    body.innerHTML='<div class="m-hud"><span>⭐ <b>'+score+'</b></span><span>'+total()+' / 12</span></div><div class="m-card"><div class="m-ins">בחרי מונה, אחר כך מכנה, ומייני<small>יש 12 שברים אפשריים מהספרות האלה. מצאי כמה שיותר!</small></div>'+
       '<div class="m-digits">'+digits.map((d,i)=>'<button type="button" class="m-dg'+(sel.length===1&&sel[0]===d?' used':'')+'" data-d="'+d+'">'+d+'</button>').join('')+'</div>'+
       '<div class="mexp" dir="ltr">'+mF(slot(0),slot(1))+'</div>'+
       (sel.length===2?'<div class="m-ch">'+[['lt','קטן מ-1'],['eq','שווה ל-1'],['gt','גדול מ-1']].map(x=>'<button type="button" class="m-cb" data-c="'+x[0]+'">'+x[1]+'</button>').join('')+'</div>':'')+
@@ -5635,7 +5640,7 @@ function bOrder(){
   BS.screen='order'; BS.back=bHome; bTitle('🔢 מסדרות את הימים');
   const cards=bShuf(BD); let next=1, miss=0; const t0=Date.now();
   const body=bEl('bBody');
-  body.innerHTML='<div class="m-card"><div class="m-ins">לחצי על מה שנברא לפי הסדר — מהיום הראשון ועד שבת<small>טעות לא מורידה ניקוד, אבל הזמן רץ ⏱️</small></div><div class="b-slots" id="bSl">'+BD.map(x=>'<div class="b-slot" data-d="'+x.d+'"><small>'+x.n+'</small><span>?</span></div>').join('')+'</div></div>'+
+  body.innerHTML='<div class="m-card"><div class="m-ins">לחצי לפי סדר הבריאה<small>טעות לא מורידה ניקוד, אבל הזמן רץ ⏱️</small></div><div class="b-slots" id="bSl">'+BD.map(x=>'<div class="b-slot" data-d="'+x.d+'"><small>'+x.n+'</small><span>?</span></div>').join('')+'</div></div>'+
     '<div class="b-pool" id="bPool">'+cards.map(x=>'<button type="button" class="b-chip" data-d="'+x.d+'">'+x.ic+' '+x.what+'</button>').join('')+'</div><div class="m-fb" id="bOfb"></div>';
   bTop();
   const tm=bEl('bTimer'); BS.timer=setInterval(()=>{ tm.textContent=Math.floor((Date.now()-t0)/1000)+' שנ׳'; },250);
@@ -5791,7 +5796,7 @@ function uFlood(back){
   BS.screen='flood'; BS.back=back||bHome; bTitle('🕊️ שלבי המבול');
   const L='אבגדהוזח', cards=bShuf(BFLOOD.map((x,i)=>({i,t:x[1]}))); let next=0, miss=0; const t0=Date.now();
   const body=bEl('bBody');
-  body.innerHTML='<div class="m-card"><div class="m-ins">לחצי על שלבי המבול לפי הסדר — מתחילת המבול ועד היציאה מהתיבה<small>טעות לא מורידה ניקוד, אבל הזמן רץ ⏱️</small></div><div class="b-slots">'+
+  body.innerHTML='<div class="m-card"><div class="m-ins">לחצי על שלבי המבול לפי הסדר<small>טעות לא מורידה ניקוד, אבל הזמן רץ ⏱️</small></div><div class="b-slots">'+
     BFLOOD.map((x,i)=>'<div class="b-slot" data-i="'+i+'"><small>שלב '+L[i]+'</small><span>?</span></div>').join('')+'</div></div>'+
     '<div class="b-pool">'+cards.map(c=>'<button type="button" class="b-chip" data-i="'+c.i+'">'+esc(c.t)+'</button>').join('')+'</div><div class="m-fb" id="uFfb"></div>';
   bTop();
@@ -9104,6 +9109,9 @@ window.TM_LOOK={
   const SKIP_G={open:1,m_bd:1,explain:1,song:1};
   const BIN=[['נכון','לא נכון'],['יש טעות','אין טעות']];
   const D1=864e5, GAPS=[1,3,7];
+  /* 🔁 חזרה מרווחת גם על מה שענו נכון (ישיבת צוות 10.11.2026, פרופ׳ אריאל):
+     שאלה שענו עליה נכון חוזרת אחרי יום ואחרי 3 ימים. רק מבחינות פעילות, ורק מ-10.11.2026. */
+  const SP_FROM=new Date(2026,10,10).getTime(), SP_GAPS=[1,3];
   const $=id=>document.getElementById(id);
   const lsg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
   const lss=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
@@ -9135,19 +9143,28 @@ window.TM_LOOK={
       let c=C.get(key);
       if(!c){ const q=showQ(e); if(!q) return; c={key,q,c:String(e.c),tp:e.tp||'',g:e.g,ex:e.ex||null,wr:new Set(),box:null,due:0,n:0,ok:0,last:0}; C.set(key,c); }
       c.n++; if(e.ok) c.ok++; c.last=e.t; if(e.ex) c.ex=e.ex;
-      if(!e.ok){ if(e.a&&e.a!==c.c) c.wr.add(String(e.a)); c.box=0; c.due=addD(e.t,GAPS[0]); }
+      if(!e.ok){ if(e.a&&e.a!==c.c) c.wr.add(String(e.a)); c.box=0; c.sp=null; c.due=addD(e.t,GAPS[0]); }
       else if(c.box!=null&&c.box<3&&e.t>=c.due){ c.box++; c.due=c.box<3?addD(e.t,GAPS[c.box]):0; }
+      else if(c.box==null&&e.t>=SP_FROM){
+        if(!c.sp){ c.sp=1; c.due=addD(e.t,SP_GAPS[0]); }
+        else if(c.sp<3&&e.t>=c.due){ c.sp++; c.due=c.sp<3?addD(e.t,SP_GAPS[c.sp-1]):0; }
+      }
       (byTp[c.tp]=byTp[c.tp]||new Set()).add(c.c);
     });
+    /* חזרה על תשובות נכונות — רק מבחינה שעוד לא נגמרה */
+    const act=id=>{ try{ const x=(EXAMS[pid]||[]).find(x=>x.id===id); if(!x||isArch(x)) return false; const n=daysLeft(x.id); return n==null||n>=0; }catch(e){ return false; } };
+    C.forEach(c=>{ if(c.sp&&!(c.ex&&act(c.ex))) c.sp=null; });
     return {list:[...C.values()],byTp};
   }
-  function dueCards(pid,now){ now=now||Date.now(); return cards(pid).list.filter(c=>c.box!=null&&c.box<3&&c.due<=now); }
+  /* מחכה לחזרה: טעות (box) או תשובה נכונה שחוזרת (sp) */
+  const inRev=c=>(c.box!=null&&c.box<3)||(c.box==null&&c.sp&&c.sp<3);
+  function dueCards(pid,now){ now=now||Date.now(); return cards(pid).list.filter(c=>inRev(c)&&c.due<=now); }
   function srsInfo(pid){
     const L=cards(pid).list, now=Date.now();
-    return {due:L.filter(c=>c.box!=null&&c.box<3&&c.due<=now).length,
-            wait:L.filter(c=>c.box!=null&&c.box<3&&c.due>now).length,
-            done:L.filter(c=>c.box===3).length,
-            next:L.filter(c=>c.box!=null&&c.box<3&&c.due>now).reduce((m,c)=>Math.min(m,c.due),Infinity)};
+    return {due:L.filter(c=>inRev(c)&&c.due<=now).length,
+            wait:L.filter(c=>inRev(c)&&c.due>now).length,
+            done:L.filter(c=>c.box===3||c.sp===3).length,
+            next:L.filter(c=>inRev(c)&&c.due>now).reduce((m,c)=>Math.min(m,c.due),Infinity)};
   }
   function optsFor(c,byTp){
     for(const p of BIN) if(p.includes(c.c)) return p.slice();
@@ -9165,7 +9182,7 @@ window.TM_LOOK={
   function buildSet(pid,N,withReview){
     const {list,byTp}=cards(pid), now=Date.now(), used=new Set(), out=[];
     const push=(c,rv)=>{ if(used.has(c.key)) return; used.add(c.key); out.push({c,rv,opts:optsFor(c,byTp)}); };
-    if(withReview) shuf(list.filter(c=>c.box!=null&&c.box<3&&c.due<=now)).slice(0,Math.ceil(N/2)).forEach(c=>push(c,1));
+    if(withReview) shuf(list.filter(c=>inRev(c)&&c.due<=now)).slice(0,Math.ceil(N/2)).forEach(c=>push(c,1));
     const recent=list.filter(c=>now-c.last<30*D1&&c.box!==3);
     /* בחינה קרובה: חצי מהשאר ממנה */
     const ne=nearExam(pid);
@@ -9209,12 +9226,23 @@ window.TM_LOOK={
     const R=RUN; if(!R) return; const {cfg}=R;
     if(R.i>=cfg.items.length){ cfg.onEnd({ok:R.ok,n:cfg.items.length,ms:R.ms,res:R.res}); return; }
     const it=cfg.items[R.i], c=it.c;
+    /* 📖 דוגמה פתורה ואז את (ישיבת צוות 10.11.2026, מיכל): קודם רואים תרגיל פתור, ואז פותרות תרגיל דומה */
+    if(it.we&&!it._weDone){
+      const w=it.we;
+      box.innerHTML=bar(cfg.title)+'<div class="tx-card tm-we"><span class="tx-tag">📖 דוגמה פתורה</span>'+
+        '<p class="tx-big">'+fx(w.q)+'</p><ol class="tm-we-s">'+(w.s||[]).map(x=>'<li>'+fx(x)+'</li>').join('')+'</ol>'+
+        (w.a?'<p class="tm-we-a">התשובה: <b>'+fx(w.a)+'</b></p>':'')+
+        '<button type="button" class="tx-next" id="txWe">עכשיו את ←</button></div>';
+      wireBar(cfg.back);
+      $('txWe').onclick=()=>{ it._weDone=1; q(); };
+      return;
+    }
     box.innerHTML=bar(cfg.title)+
       '<div class="tx-pg"><i style="width:'+Math.round(R.i/cfg.items.length*100)+'%"></i></div><div class="tx-cnt">שאלה '+(R.i+1)+' מתוך '+cfg.items.length+'</div>'+
-      '<div class="tx-card">'+(it.rv?'<span class="tx-tag rv">🔁 טעית בזה פעם. עכשיו תצליחי!</span>':(c.tp?'<span class="tx-tag">'+esc(c.tp)+'</span>':''))+
+      '<div class="tx-card">'+(it.rv?'<span class="tx-tag rv">'+(c.box==null&&c.sp?'🔁 בודקות שזכרת':'🔁 טעית בזה פעם. עכשיו תצליחי!')+'</span>':(c.tp?'<span class="tx-tag">'+esc(c.tp)+'</span>':''))+
       '<p class="tx-big">'+fx(c.q)+'</p>'+
       (it.opts?'<div class="tx-opts">'+it.opts.map((o,k)=>'<button type="button" class="tx-opt" data-k="'+k+'">'+fx(o)+'</button>').join('')+'</div>'
-        :'<p class="tx-note">נסי להיזכר בתשובה, ואז לחצי לבדוק 🤔</p><button type="button" class="tx-next sec" id="txShow">לראות את התשובה</button>')+
+        :'<p class="tx-note">נסי להיזכר, ואז לבדוק 🤔</p><button type="button" class="tx-next sec" id="txShow">לראות את התשובה</button>')+
       '<div id="txFb"></div></div>';
     wireBar(cfg.back);
     try{ tStart(); }catch(e){}
@@ -9449,8 +9477,8 @@ window.TM_LOOK={
     if(!PROFILE) return; const pid=PROFILE.id, inf=srsInfo(pid);
     open();
     const nx=inf.next<Infinity?Math.round((d0(inf.next)-today0())/D1):null;
-    box.innerHTML=bar('🔁 טעויות שחוזרות')+'<div class="tx-card">'+
-      '<p class="tx-note">כל שאלה שטעית בה חוזרת אלייך: <b>מחר</b>, אחרי <b>3 ימים</b> ואחרי <b>שבוע</b>. אם עונים נכון 3 פעמים — יודעת את זה! 🧠</p>'+
+    box.innerHTML=bar('🔁 שאלות שחוזרות')+'<div class="tx-card">'+
+      '<p class="tx-note">שאלות חוזרות, כדי לא לשכוח 🧠</p>'+
       '<div class="tx-vs"><div><b>'+inf.due+'</b>מחכות לך היום</div><div><b>'+inf.wait+'</b>יחזרו בקרוב</div><div class="win"><b>'+inf.done+'</b>כבר יודעת ✓</div></div>'+
       (inf.due?'<button type="button" class="tx-next" id="txGo">בואי נתחיל ('+Math.min(inf.due,10)+' שאלות) 💪</button>'
         :'<p class="tx-note" style="text-align:center;margin-top:10px">🎉 אין טעויות שמחכות היום!'+(nx!=null?'<br>הבאות יחזרו '+(nx<=1?'מחר':'בעוד '+nx+' ימים')+'.':'')+'</p>')+
@@ -9459,10 +9487,10 @@ window.TM_LOOK={
     if($('txGo')) $('txGo').onclick=()=>{
       const {byTp}=cards(pid);
       const items=shuf(dueCards(pid)).slice(0,10).map(c=>({c,rv:1,opts:optsFor(c,byTp)}));
-      run({title:'🔁 טעויות שחוזרות',items,game:'srs',back:openReview,onEnd:r=>{
+      run({title:'🔁 שאלות שחוזרות',items,game:'srs',back:openReview,onEnd:r=>{
         try{ mConfetti(); }catch(e){}
-        box.innerHTML=bar('🔁 טעויות שחוזרות')+'<div class="tx-card tx-end"><div class="e">🧠</div><h3>כל הכבוד!</h3><p>תיקנת <b>'+r.ok+'</b> מתוך '+r.n+' טעויות</p>'+
-          '<p>מה שענית נכון יחזור עוד כמה ימים, ומה שלא — יחזור מחר.</p><button type="button" class="tx-next" id="txDone">חזרה למקצועות</button></div>';
+        box.innerHTML=bar('🔁 שאלות שחוזרות')+'<div class="tx-card tx-end"><div class="e">🧠</div><h3>כל הכבוד!</h3><p>ענית נכון על <b>'+r.ok+'</b> מתוך '+r.n+'</p>'+
+          '<p>מה שטעית יחזור מחר 🔁</p><button type="button" class="tx-next" id="txDone">חזרה למקצועות</button></div>';
         wireBar(openReview); $('txDone').onclick=close;
       }});
     };
@@ -9494,7 +9522,7 @@ window.TM_LOOK={
     box.innerHTML=bar('⚔️ דו-קרב אחיות')+
       (inv.length?'<div class="tx-card"><p class="tx-big" style="margin-bottom:8px">📨 הזמינו אותך!</p>'+inv.map(d=>'<div class="tx-du"><span class="w">'+em(d.a)+' <b>'+esc(nm(d.a))+'</b> מחכה לך לדו-קרב</span><button type="button" data-play="'+d.id+'">לשחק ⚔️</button></div>').join('')+'</div>':'')+
       '<div class="tx-card"><p class="tx-big" style="margin-bottom:6px">את מי להזמין?</p>'+
-      '<p class="tx-note">כל אחת עונה על 10 שאלות <b>מהחומר שלה</b>. מנצחת מי שעונה נכון יותר. בתיקו — מי שמהירה יותר ⚡</p>'+
+      '<p class="tx-note">10 שאלות <b>מהחומר שלך</b>. מי שצודקת יותר — מנצחת ⚡</p>'+
       '<div class="tx-sis">'+sis.map(k=>'<button type="button" data-ch="'+k+'"><span class="ic">'+em(k)+'</span>'+esc(nm(k))+'</button>').join('')+'</div></div>'+
       (mine.length?'<div class="tx-card"><p class="tx-big" style="margin-bottom:8px">הדו-קרבים שלך</p>'+mine.map(d=>{
         const w=winner(d), other=d.a===pid?d.b:d.a, me=d.a===pid?d.ra:d.rb, her=d.a===pid?d.rb:d.ra;
@@ -9503,7 +9531,7 @@ window.TM_LOOK={
         else if(!me) st='מחכה שתשחקי';
         else st='⏳ מחכים ל'+esc(nm(other))+' · ענית נכון על '+me.ok;
         return '<div class="tx-du"><span class="w">'+em(other)+' נגד <b>'+esc(nm(other))+'</b><br><small>'+st+'</small></span>'+(w?'<button type="button" data-see="'+d.id+'">לראות</button>':'')+'</div>'; }).join('')+'</div>':'')+
-      (!DB?'<p class="tx-note">⚠️ הטלפון הזה לא מחובר. הדו-קרב יעבוד רק אם שתיכן משחקות בטלפון הזה.</p>':'');
+      (!DB?'<p class="tx-note">⚠️ אין אינטרנט. משחקות בטלפון הזה</p>':'');
     wireBar();
     box.querySelectorAll('[data-ch]').forEach(b=>b.onclick=()=>{
       const d={id:pid+'-'+b.dataset.ch+'-'+Date.now().toString(36),a:pid,b:b.dataset.ch,t:Date.now(),ra:null,rb:null};
@@ -9556,7 +9584,7 @@ window.TM_LOOK={
     const mis=misGet(pid), inf=srsInfo(pid), inv=myInvites(pid), s=streak(pid);
     w.innerHTML=stBar(pid)+(inv.length?'<button type="button" class="tx-inv" id="txInv">⚔️ '+esc(nm(inv[0].a))+' הזמינה אותך לדו-קרב! לחצי לשחק ←</button>':'')+
       '<div class="tx-row">'+
-      '<button type="button" class="tx-tile" id="txRev">'+(inf.due?'<span class="badge">'+inf.due+'</span>':'')+'<span class="ic">🔁</span>טעויות שחוזרות<small>'+(inf.due?inf.due+' מחכות לך':'אין היום 🎉')+'</small></button>'+
+      '<button type="button" class="tx-tile" id="txRev">'+(inf.due?'<span class="badge">'+inf.due+'</span>':'')+'<span class="ic">🔁</span>שאלות שחוזרות<small>'+(inf.due?inf.due+' מחכות לך':'אין היום 🎉')+'</small></button>'+
       '<button type="button" class="tx-tile" id="txDuel"><span class="ic">⚔️</span>דו-קרב אחיות<small>מי תנצח?</small></button>'+
       '</div>';
     $('txRev').onclick=openReview; $('txDuel').onclick=openDuel; /* 3.11.2026: הוסרו לבקשת ההורה — תסבירי לינשופי + ההסברים שלי */
@@ -10039,7 +10067,7 @@ const AV_WEEKS=[
     open();
     let h=bar('📖 פרקי אבות');
     h+='<div class="av-rules">📅 כל יום משנה אחת (ראשון עד שישי).<br>📝 כשלומדים את כולן — בוחן קליל של '+QN+' שאלות.<br>🎁 <b>למדת כל יום + 60 ומעלה בבוחן = '+PRIZE+' ₪!</b></div>';
-    if(!isCur) h+='<div class="tx-note">זה השבוע שעבר. אפשר עוד לגמור את הבוחן היום.</div>';
+    if(!isCur) h+='<div class="tx-note">אפשר עוד לגמור את הבוחן היום</div>';
     S.days.forEach(d=>{
       const isToday=isCur&&d.i===today, open_=!isCur||d.i<=today;
       let st;
@@ -10054,8 +10082,8 @@ const AV_WEEKS=[
     h+='<button type="button" class="av-quiz" id="avQz"'+(S.allDone?'':' disabled')+'>'+
       (S.allDone?(S.passed?'📝 הבוחן — עברת! ('+S.best*10+') · לנסות שוב?':'📝 לבוחן! '+QN+' שאלות'):'📝 הבוחן נפתח אחרי שלומדים את כל המשניות (עוד '+left+')')+'</button>';
     if(S.prize) h+='<div class="av-pz">🎉 עברת את הבוחן ולמדת כל יום — מגיעים לך '+PRIZE+' ₪! 🎁<br>תראי לאבא ואמא</div>';
-    else if(S.passed) h+='<div class="tx-note">עברת את הבוחן — כל הכבוד! 🌟 השבוע היה יום שפספסת, אז הפרס מחכה לשבוע הבא. ממשיכות!</div>';
-    else if(S.days.some(d=>!d.onTime&&(d.done||(isCur?d.i<today:true)))) h+='<div class="tx-note">פספסת יום השבוע, אז השבוע בלי פרס. אבל אפשר להשלים וללמוד — ובשבוע הבא זה שלך! 💪</div>';
+    else if(S.passed) h+='<div class="tx-note">עברת! 🌟 פספסת יום, אז הפרס בשבוע הבא</div>';
+    else if(S.days.some(d=>!d.onTime&&(d.done||(isCur?d.i<today:true)))) h+='<div class="tx-note">פספסת יום. בשבוע הבא זה שלך! 💪</div>';
     /* בוחן של השבוע שעבר — פתוח עד מוצאי יום ראשון */
     if(isCur&&today===0){ const P=weekState(pid,cur-1); if(P.n>=0&&P.allDone&&!P.passed) h+='<button type="button" class="av-quiz" id="avPrev" style="background:#E2A72E;color:#3A2E22">📝 הבוחן של השבוע שעבר — עוד לא עשית!</button>'; }
     box.innerHTML=h; wire();
@@ -11579,9 +11607,9 @@ button:not(:disabled):active{filter:brightness(.93);}
     sm.open(); const box=$('txIn'); box.dataset.v='';
     const L=activeExams(pid);
     box.innerHTML=sm.bar('🗺️ המפה שלי')+
-      '<div class="tx-card"><p class="tx-note" style="margin:0 0 6px">כל נושא בבחינה — ואיפה את עכשיו. לוחצים על נושא כדי לתרגל אותו.</p>'+
+      '<div class="tx-card"><p class="tx-note" style="margin:0 0 6px">לוחצים על נושא כדי לתרגל</p>'+
       '<div class="ms-leg">'+LV.map(x=>'<span>'+x+'</span>').join('')+'</div>'+
-      '<p class="tx-note" style="margin:6px 0 0;font-size:.85rem">⭐ שולטת = ענית נכון ב-3 ימים שונים</p></div>'+
+      '<p class="tx-note" style="margin:6px 0 0;font-size:.85rem">⭐ = נכון ב-3 ימים שונים</p></div>'+
       (L.length?L.map(ex=>{
         const {rows,cnt}=mastery(pid,ex);
         return '<div class="tx-card ms-ex"><h3>'+E(exName(ex))+'</h3><p class="ms-sum">'+[3,2,1,0].filter(i=>cnt[i]).map(i=>LV[i].split(' ')[0]+' '+cnt[i]).join(' · ')+'</p>'+
@@ -11620,7 +11648,7 @@ button:not(:disabled):active{filter:brightness(.93);}
       try{ if(r.ok/r.n>=.8) mConfetti(); }catch(e){}
       box.innerHTML=sm.bar('🗺️ '+E(showName(tp)))+'<div class="tx-card tx-end"><div class="e">'+(nl?LV[nl.lv].split(' ')[0]:'🗺️')+'</div><h3>ענית נכון על '+r.ok+' מתוך '+r.n+'</h3>'+
         '<p>'+(nl?'הנושא עכשיו: <b>'+LV[nl.lv].replace(/^\S+ /,'')+'</b>':'')+'</p>'+
-        (nl&&nl.lv<3?'<p class="tx-note">כדי להגיע ל-⭐ — עונים נכון גם מחר ומחרתיים. ככה זה נשאר בראש 🧠</p>':'')+
+        (nl&&nl.lv<3?'<p class="tx-note">ל-⭐: עונים נכון גם מחר 🧠</p>':'')+
         '<button type="button" class="tx-next" id="msBack">חזרה למפה 🗺️</button></div>';
       sm.wireBar(openMap); $('msBack').onclick=openMap;
     }});
@@ -11632,17 +11660,17 @@ button:not(:disabled):active{filter:brightness(.93);}
     const out=[];
     try{
       if(ex.type==='core'&&pidNow()===pid){
-        bank('Q').forEach(it=>{ if(!it||!it.q||!Array.isArray(it.options)) return; let t; try{ t=topicOf(it,pid); }catch(e){ t=''; } if(t!==tp) return;
-          out.push({q:strip(it.q),c:String(it.options[it.correct]),opts:it.options.map(String)}); });
+        bank('Q').forEach(it=>{ if(!it||!it.q||!Array.isArray(it.options)) return; let t; try{ t=topicOf(it,pid); }catch(e){ t=''; } if(tp!=null&&t!==tp) return;
+          out.push({q:strip(it.q),c:String(it.options[it.correct]),opts:it.options.map(String),tp:t}); });
       } else if(ex.type==='heb'){
-        HQS.forEach(q=>{ if('הבעה · '+HTK(q.t).t!==tp) return; out.push({q:strip(q.q),c:String(q.ans),opts:q.opts.map(String)}); });
+        HQS.forEach(q=>{ const t='הבעה · '+HTK(q.t).t; if(tp!=null&&t!==tp) return; out.push({q:strip(q.q),c:String(q.ans),opts:q.opts.map(String),tp:t}); });
       } else if(ex.type==='bereshit'){
-        const u=bUnits(ex).find(u=>'תורה · '+u.t===tp);
-        if(u) (u.q||[]).forEach(q=>{ if(!q||!q.q||!q.a) return; out.push({q:strip(q.q),c:String(q.a),opts:[q.a].concat(q.w||[]).map(String)}); });
+        bUnits(ex).filter(u=>tp==null||'תורה · '+u.t===tp).forEach(u=>(u.q||[]).forEach(q=>{ if(!q||!q.q||!q.a) return; out.push({q:strip(q.q),c:String(q.a),opts:[q.a].concat(q.w||[]).map(String),tp:'תורה · '+u.t}); }));
       }
     }catch(e){}
     return out.filter(q=>q.opts.length>=2&&q.q.length<260);
   }
+  window.TM_POOL=poolFor;   /* 10.11.2026: גם למבחן דמה ולבוקר הבחינה */
   const preKey=(pid,ex,tp)=>'tm_pre_'+pid+'_'+ex.id+'|'+tp;
   function preTopic(pid,ex){
     if(ex.type==='math') return null;
@@ -12105,7 +12133,7 @@ button:not(:disabled):active{filter:brightness(.93);}
         '<div class="up-step"><span class="n">2</span><span class="e">📚</span>בוחרות מקצוע מהרשימה</div>'+
         '<div class="up-step"><span class="n">3</span><span class="e">🗂️</span>מוסיפות לחומר הישן או מוחקות אותו</div>'+
       '</div>'+
-      '<p class="tx-note" style="margin-top:10px">💡 איך מצלמים טוב? כל דף לבד · מקרוב · באור טוב · שהדף יהיה ישר.</p>'+
+      '<p class="tx-note" style="margin-top:10px">💡 כל דף לבד, מקרוב, באור טוב</p>'+
       '<button type="button" class="tx-next" id="upGo">📸 בואי נתחיל</button></div>'+
       (mine.length?'<div class="tx-card"><p class="tx-big" style="font-size:1.05rem;margin-bottom:10px">החומר שהעלית</p>'+mine.map(r=>{
         const ex=examById(pid,r.exam), ready=r.st==='ready';
@@ -12238,7 +12266,7 @@ button:not(:disabled):active{filter:brightness(.93);}
       try{ ok(); }catch(e){}
       box.querySelector('.up-wait').innerHTML='<div class="tx-end"><div class="e">🎉</div><h3>החומר מוכן!</h3><p>ינשופי הכין '+r.mat.topics.length+' נושאים ו-'+nq+' שאלות</p>'+(r.mat.chk?'<p class="tx-note" style="margin-top:6px">✓ כל השאלות נבדקו</p>':'')+
         (where==='local'?'<p class="tx-note" style="margin-top:8px">📵 הטלפון לא שומר בענן — החומר נמצא רק בטלפון הזה.</p>':'')+
-        ((r.mat.words||[]).length&&r.subj==='dict'?'<p class="tx-note" style="margin-top:8px">📝 '+r.mat.words.length+' מילים — זו הרשימה החדשה שלך בהכתבה!</p>':'')+
+        ((r.mat.words||[]).length&&r.subj==='dict'?'<p class="tx-note" style="margin-top:8px">📝 '+r.mat.words.length+' מילים חדשות להכתבה!</p>':'')+
         (r.subj==='dict'?'<button type="button" class="tx-next" id="upDict">🔤 להכתבה באנגלית</button></div>':'<button type="button" class="tx-next" id="upSee">📖 לראות את החומר</button><button type="button" class="tx-next sec" id="upPr">✏️ לתרגל עכשיו</button></div>');
       if(r.subj==='dict'){ $('upDict').onclick=()=>{ try{ SM().close(); }catch(e){} openDict(); }; return; }
       $('upSee').onclick=()=>openMat(pid,r.exam,openUp);
@@ -12330,11 +12358,12 @@ button:not(:disabled):active{filter:brightness(.93);}
     const nq=T.reduce((s,x)=>s+x.t.q.length+x.t.tf.length,0);
     box.insertAdjacentHTML('beforeend',
       '<div class="tx-card"><p class="tx-big" style="margin-bottom:6px">'+esc(B.length===1?B[0].mat.title:(ex&&ex.title)||B[0].mat.title)+'</p>'+
-      '<p class="tx-note">'+T.length+' נושאים · '+nq+' שאלות · לחצי על נושא כדי ללמוד אותו 👇</p>'+
+      '<p class="tx-note">'+T.length+' נושאים · '+nq+' שאלות · לחצי על נושא 👇</p>'+
       '<button type="button" class="tx-next" id="upAll" style="margin-top:4px">✏️ לתרגל הכול ('+Math.min(20,nq)+' שאלות)</button></div>'+
       '<div class="tx-card">'+T.map((x,i)=>
         '<details class="up-tp"><summary><span>'+(i+1)+'.</span><span>'+esc(x.t.t)+'</span><span class="c">'+(x.t.q.length+x.t.tf.length)+' שאלות</span></summary><div class="bd">'+
         '<div>'+esc(x.t.ex).replace(/\n/g,'<br>')+'</div>'+(x.t.tip?'<div class="tip">🧠 '+esc(x.t.tip)+'</div>':'')+
+        (Array.isArray(x.t.we)&&x.t.we.length?x.t.we.map(w=>'<div class="tm-we-box"><b>📖 דוגמה פתורה:</b> '+esc(w.q)+'<ol class="tm-we-s">'+(w.s||[]).map(z=>'<li>'+esc(z)+'</li>').join('')+'</ol>'+(w.a?'<div>התשובה: <b>'+esc(w.a)+'</b></div>':'')+'</div>').join(''):'')+
         '<div class="rw"><button type="button" data-say="'+i+'">🔊 להקשיב</button><button type="button" class="pri" data-pr="'+i+'">✏️ לתרגל</button></div></div></details>').join('')+
       '</div>'+
       '<div class="tx-card"><button type="button" class="tx-next sec" id="upPh" style="margin-top:0">📷 הדפים שצילמתי</button><div id="upPhs"></div>'+
@@ -12350,17 +12379,33 @@ button:not(:disabled):active{filter:brightness(.93);}
   }
 
   /* תרגול: כל החומר (10 שאלות) או נושא אחד */
-  function practice(pid,exId,one,back){
+  function poolOf(pid,exId,one){
     const ex=examById(pid,exId), sn=sname(ex&&ex.subj);
     const pool=[];
     readyFor(pid,exId).forEach(r=>r.mat.topics.forEach((t,ti)=>{
       if(one&&!(one.r===r&&one.ti===ti)) return;
       const tp=tpName(sn,t.t);
-      t.q.forEach((q,qi)=>pool.push({c:{q:q.q,c:q.o[q.a],tp,key:'up:'+r.id+':'+ti+':q'+qi,ex:exId,why:q.why},opts:(q.o.length===3&&['in','on','at'].every(w=>q.o.includes(w)))?['in','on','at']:shuf(q.o)}));
-      t.tf.forEach((f,fi)=>pool.push({c:{q:'נכון או לא נכון? '+f.s,c:f.ok?'נכון ✓':'לא נכון ✗',tp,key:'up:'+r.id+':'+ti+':f'+fi,ex:exId,why:f.why},opts:['נכון ✓','לא נכון ✗']}));
+      /* 📖 דוגמאות פתורות (10.11.2026): t.we=[{q,s:[צעדים],a}] — מוצגות לפני השאלה הראשונה של הנושא */
+      const we=(Array.isArray(t.we)?t.we:[]).filter(w=>w&&w.q);
+      t.q.forEach((q,qi)=>pool.push({c:{q:q.q,c:q.o[q.a],tp,key:'up:'+r.id+':'+ti+':q'+qi,ex:exId,why:q.why},opts:(q.o.length===3&&['in','on','at'].every(w=>q.o.includes(w)))?['in','on','at']:shuf(q.o),_we:we,_tk:r.id+':'+ti}));
+      (t.tf||[]).forEach((f,fi)=>pool.push({c:{q:'נכון או לא נכון? '+f.s,c:f.ok?'נכון ✓':'לא נכון ✗',tp,key:'up:'+r.id+':'+ti+':f'+fi,ex:exId,why:f.why},opts:['נכון ✓','לא נכון ✗'],_we:[],_tk:r.id+':'+ti}));
     }));
+    return pool;
+  }
+  function practice(pid,exId,one,back){
+    const pool=poolOf(pid,exId,one);
     if(!pool.length) return;
-    const items=shuf(pool).slice(0,one?12:20);
+    const ex=examById(pid,exId), sn=sname(ex&&ex.subj);
+    let items=shuf(pool).slice(0,one?12:20);
+    /* 🔁 שאלות מהבחינה הזאת שהגיע זמנן לחזור — בהתחלה (עד 4) */
+    try{ const S=SM(), C=S.cards(pid), now=Date.now();
+      const due=shuf(C.list.filter(c=>c.ex===exId&&c.due<=now&&((c.box!=null&&c.box<3)||(c.box==null&&c.sp&&c.sp<3)))).slice(0,4)
+        .map(c=>({c,rv:1,opts:S.optsFor(c,C.byTp)})).filter(x=>x.opts);
+      if(due.length){ const ks=new Set(due.map(x=>x.c.key)); items=due.concat(items.filter(x=>!ks.has(x.c.key))).slice(0,items.length); }
+    }catch(e){}
+    /* דוגמה פתורה לפני השאלה הראשונה של כל נושא שיש לו דוגמה */
+    const usedWe={};
+    items.forEach(it=>{ if(it._we&&it._we.length&&!usedWe[it._tk]){ usedWe[it._tk]=1; it.we=it._we[Math.floor(Math.random()*it._we.length)]; } });
     const title=one?'✏️ '+one.t.t:'✏️ '+(sn||'תרגול');
     SM().run({title,items,game:'up_q',back,onEnd:res=>{
       const box=shell(title,back);
@@ -12456,7 +12501,7 @@ button:not(:disabled):active{filter:brightness(.93);}
     const pick=w=>({en:w.en,he:w.he,icon:w.icon||'📝'});
     return {cur:L[L.length-1].mat.words.map(pick),old:L.slice(0,-1).reverse().map(r=>r.mat.words.map(pick))};
   }
-  window.TM_UP={openUp,openMat,practice,topics:topicsFor,all,parentView,dictLists};
+  window.TM_UP={openUp,openMat,practice,topics:topicsFor,all,parentView,dictLists,pool:poolOf,ready:readyFor};
 })();
 </script>
 
@@ -12621,7 +12666,7 @@ button:not(:disabled):active{filter:brightness(.93);}
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611042350';
+  const TM_BUILD='202611110100';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -12736,8 +12781,8 @@ button:not(:disabled):active{filter:brightness(.93);}
   }
   setInterval(()=>{ if(chip.classList.contains('show')&&(hubOpen()||!prof())) chip.classList.remove('show'); },1500);
   const WHY=[['ans','❌ התשובה הנכונה פה לא נכונה'],['q','🤔 השאלה לא ברורה'],['other','✏️ משהו אחר']];
-  function flagSheet(){
-    const A=lastAns; if(!A) return;
+  function flagSheet(A0){
+    const A=(A0&&A0.x)?A0:lastAns; if(!A) return;
     let o=$('flOv'); if(!o){ o=document.createElement('div'); o.className='ov'; o.id='flOv'; o.innerHTML='<div class="ov-box" id="flBox"></div>'; o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); }); document.body.appendChild(o); }
     let why='';
     $('flBox').innerHTML='<h2>⚑ ראית טעות?</h2><p style="margin:0">תודה שאת בודקת! 🧐 על איזו שאלה מדובר:</p>'+
@@ -12757,7 +12802,7 @@ button:not(:disabled):active{filter:brightness(.93);}
     };
     o.classList.add('show');
   }
-  chip.onclick=flagSheet;
+  chip.onclick=()=>flagSheet();
   const locFl=()=>{ try{ return JSON.parse(lg('tm_flags')||'[]')||[]; }catch(e){ return []; } };
 
   /* אזור הורים: ⚑ דיווחים על טעויות */
@@ -12785,7 +12830,7 @@ button:not(:disabled):active{filter:brightness(.93);}
       const loc=locFl(); const i=loc.findIndex(x=>x.id===f.id); if(i>=0){ loc[i].done=f.done; ls('tm_flags',JSON.stringify(loc)); }
       const D=db(); if(D){ try{ await D.doc('flags/'+f.id).set(f); }catch(e){} } parentFlags(); });
   }
-  window.TM_FLAGS={parentFlags,allFlags};
+  window.TM_FLAGS={parentFlags,allFlags,sheet:flagSheet};
   if(typeof showDash==='function'){
     const _sd=showDash;
     showDash=async function(){
@@ -13331,7 +13376,7 @@ button:not(:disabled):active{filter:brightness(.93);}
     const a=avOf(pid), b=bal(pid);
     box.innerHTML=S().bar('👗 הדמות שלי')+'<div class="tx-card"><div class="av-stage">'+figSvg(pid)+'</div>'+
       '<p style="margin:0;text-align:center"><span class="av-bal">💎 '+b+'</span></p>'+
-      '<p class="tx-note" style="text-align:center;margin:6px 0 0">כל תשובה נכונה = 💎 אחד. קונים בגדים ודברים, והדמות שלך תופיע איתם בפודיום!</p>'+
+      '<p class="tx-note" style="text-align:center;margin:6px 0 0">תשובה נכונה = 💎. קונים בגדים לדמות!</p>'+
       '<div class="av-how"><span>👆 לוחצים = לובשים</span><span>👆 שוב = מורידים</span><span>💛 מה שקנית — שלך</span></div>'+
       SHOP.filter(c=>!isCloth(c.k)||(WARD[pid]&&!(pid==='ziv'&&c.k==='pants'))).map(c=>'<div class="av-cat">'+E(c.n)+'</div><div class="av-grid">'+c.it.map(x=>{ const own=a.own.includes(x[0]), wear=a.wear[c.k]===x[0];
         const pic=isCloth(c.k)?'<span class="sw" style="background:'+SW(x[0])+'"></span>':'<span class="e">'+x[1]+'</span>';
@@ -13853,7 +13898,7 @@ button:not(:disabled):active{filter:brightness(.93);}
   }
   window.TM_MM_BTN=function(exId){
     if(!mmPages(exId)) return '';
-    return '<button type="button" class="mm-btn" data-mm="'+exId+'"><span class="mm-ic">🗺️</span><span><b>מפת זיכרון</b><small>כל המבחן במסך אחד. מסתכלות דקה לפני המבחן</small></span></button>';
+    return '<button type="button" class="mm-btn" data-mm="'+exId+'"><span class="mm-ic">🗺️</span><span><b>מפת זיכרון</b><small>כל המבחן במסך אחד</small></span></button>';
   };
   function mmOpen(exId){
     const pg=mmPages(exId); if(!pg) return;
@@ -13883,7 +13928,7 @@ button:not(:disabled):active{filter:brightness(.93);}
     let ex=null; try{ ex=CUR_EXAM; }catch(e){}
     let el=$('mmCore');
     if(!el){ el=document.createElement('div'); el.id='mmCore'; sk.after(el); }
-    const h=(ex&&ex.type==='core')?TM_MM_BTN(ex.id):'';
+    const h=(ex&&ex.type==='core')?TM_MM_BTN(ex.id)+(window.TM_TRICK_BTN?TM_TRICK_BTN(ex.id):''):'';
     if(el.innerHTML!==h) el.innerHTML=h;
     if(el.previousElementSibling!==sk) sk.after(el);
   }
@@ -13924,6 +13969,12 @@ button:not(:disabled):active{filter:brightness(.93);}
     if(exId&&TM_MM_BTN(exId)){
       const t=document.createElement('button'); t.type='button'; t.className='m-tile'; t.dataset.mm=exId; t.dataset.tmg='learn';
       t.innerHTML='<span class="ic">🗺️</span><b>מפת זיכרון</b><span>כל המבחן במסך אחד</span>';
+      tiles.prepend(t);
+    }
+    /* 🧠 טריק לזכור (10.11.2026) — בתוך "ללמוד" */
+    if(exId&&window.TM_TRICK_HAS&&TM_TRICK_HAS(exId)){
+      const t=document.createElement('button'); t.type='button'; t.className='m-tile'; t.dataset.trick=exId; t.dataset.tmg='learn';
+      t.innerHTML='<span class="ic">🧠</span><b>טריק לזכור</b><span>ראשי תיבות וסיפור</span>';
       tiles.prepend(t);
     }
     const all=[...tiles.querySelectorAll('.m-tile')];
@@ -15137,6 +15188,425 @@ function __dadDelPatch(){
     });
   }
   setInterval(tryDel,1000);
+})();
+</script>
+
+<style>
+/* ===== ישיבת צוות 10.11.2026 (לילה) — אושר ע״י ההורה ===== */
+.tm-hid{display:none !important;}
+.tm-dots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:4px 0 12px;direction:rtl;}
+.tm-dots i{display:block;width:11px;height:11px;border-radius:50%;background:var(--line,#DFE3EE);}
+.tm-dots i.ok{background:var(--good,#17794D);}
+.tm-dots i.no{background:#F08A24;}
+.tm-dots i.cur{background:var(--surface,#fff);box-shadow:0 0 0 2.5px var(--acc-fg,#1F55B8);transform:scale(1.15);}
+.tm-dots i.past{background:#A9B0C2;}
+.tm-3l{margin:12px 0 0;padding:12px 14px;border-radius:16px;background:var(--good-soft,#DFF4E8);border:1.5px solid var(--good,#17794D);text-align:start;}
+.tm-3l h4{margin:0 0 6px;font-size:1rem;}
+.tm-3l ul{margin:0;padding:0 18px 0 0;}
+.tm-3l li{margin:4px 0;font-size:.95rem;line-height:1.5;}
+.tm-we-s{margin:4px 0 10px;padding:0 20px 0 0;line-height:1.7;font-size:1.02rem;}
+.tm-we-s li{margin:2px 0;}
+.tm-we-a{margin:0 0 6px;font-size:1.05rem;}
+.tm-we-box{margin:8px 0;padding:8px 10px;border-radius:12px;background:#FFF7E0;border:1px solid #F2D58A;}
+.tm-hb{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin:0 0 12px;padding:10px 16px;border:2px solid var(--acc-fg,#1F55B8);border-radius:18px;background:var(--acc-soft,#E0EAFB);color:var(--ink,#1C2233);font-family:'Heebo',sans-serif;font-weight:800;font-size:1.04rem;text-align:start;cursor:pointer;}
+.tm-hb .ic{font-size:1.6rem;line-height:1;}
+.tm-hb small{display:block;font-weight:500;font-size:.85rem;color:var(--muted,#586079);}
+.tm-hb:active{transform:scale(.98);}
+#tmPushBtn{border-style:dashed;background:var(--surface,#fff);}
+#tmClk{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:12px;z-index:2147481200;display:none;padding:6px 14px;border-radius:99px;background:#1C2233;color:#fff;font-family:'Heebo',sans-serif;font-weight:800;font-size:.95rem;direction:ltr;}
+#tmClk.show{display:block;}
+#tmClk.late{background:#B93A2B;}
+#hubBox.tm-morn-on > :not(#tmMorn):not(.hub-nav){display:none !important;}
+#tmMorn{text-align:center;padding:24px 8px 10px;}
+#tmMorn .sun{font-size:4rem;line-height:1.1;}
+#tmMorn h2{margin:8px 0 4px;font-size:1.5rem;}
+#tmMorn p{margin:0 0 18px;color:var(--muted,#586079);}
+#tmMorn .go{display:block;width:100%;min-height:96px;border:none;border-radius:24px;background:#F2B134;color:#1C2233;font-family:'Heebo',sans-serif;font-weight:800;font-size:1.35rem;cursor:pointer;box-shadow:0 6px 0 #C98A12;}
+#tmMorn .go:active{transform:translateY(3px);box-shadow:0 3px 0 #C98A12;}
+#tmMorn .skip{margin-top:22px;background:none;border:none;color:var(--muted,#586079);font:inherit;font-size:.9rem;text-decoration:underline;cursor:pointer;min-height:44px;}
+.tm-flg{position:absolute;top:8px;left:8px;width:36px;height:36px;min-height:0 !important;padding:0 !important;border-radius:50%;border:1px solid var(--line,#DFE3EE);background:var(--surface,#fff);color:var(--muted,#586079);font-size:1rem;line-height:1;cursor:pointer;opacity:.75;z-index:2;}
+.tm-flg-host{position:relative;}
+#tkOv2{z-index:2147481400;}
+.tk-c{margin:10px 0;padding:12px 14px;border-radius:16px;background:var(--bg,#F5F6FA);border:1px solid var(--line,#DFE3EE);}
+.tk-c h3{margin:0 0 8px;font-size:1.05rem;}
+.tk-w{font-size:2rem;font-weight:800;text-align:center;letter-spacing:2px;margin:4px 0 8px;color:var(--acc-fg,#1F55B8);}
+.tk-l{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:1rem;}
+.tk-l b{font-size:1.2rem;color:var(--acc-fg,#1F55B8);text-align:center;}
+.tk-s{font-size:1.02rem;line-height:1.75;margin:0;}
+.tk-c button{margin-top:8px;min-height:44px;padding:6px 14px;border-radius:12px;border:1.5px solid var(--line,#DFE3EE);background:var(--surface,#fff);color:var(--ink,#1C2233);font:inherit;font-weight:700;cursor:pointer;}
+#tmOff{position:fixed;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2147480500;display:none;padding:8px 14px;border-radius:99px;background:#1C2233;color:#fff;font-family:'Heebo',sans-serif;font-weight:700;font-size:.85rem;}
+#tmOff.show{display:block;}
+</style>
+<script>
+/* ================================================================
+   ישיבת צוות 10.11.2026 (לילה) — 14 המלצות שאושרו (לא אושר: 4 — שאלת "למה?")
+   1 📖 דוגמה פתורה ואז את (בתוך מסך השאלות + חומר שהועלה) · 2 🎓 מבחן דמה
+   3 🔁 חזרה מרווחת גם על תשובות נכונות (בתוך TM_SMART) · 5 🔤 ראשי תיבות · 6 📖 סיפור שמחבר
+   7 ☀️ בוקר הבחינה — כפתור אחד · 8 ✂️ הוראות קצרות · 9 ●●● 20 נקודות התקדמות
+   10 📲 אייקון אישי במסך הבית · 11 🌟 3 דברים שידעתי · 12 ⚑ דגל בכל שאלה
+   13 💾 שמירה בלי אינטרנט · 14 🔔 תזכורות כשהאפליקציה סגורה · 15 (תוכנית — לא בקוד)
+   ================================================================ */
+(function(){
+  const $=id=>document.getElementById(id);
+  const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+  const ls=(k,v)=>{ try{ if(v==null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} };
+  const E=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const clean=s=>String(s==null?'':s).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  const prof=()=>{ try{ return (typeof PROFILE!=='undefined'&&PROFILE)?PROFILE:null; }catch(e){ return null; } };
+  const db=()=>{ try{ return (typeof DB!=='undefined'&&DB)?DB:null; }catch(e){ return null; } };
+  const S=()=>window.TM_SMART||{};
+  const shuf=a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+  const dk=t=>{ const d=new Date(t||Date.now()); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+  const KIDS=['aviv','roni','hili','ziv'];
+  const NM={aviv:'אביב',roni:'רוני',hili:'הילי',ziv:'זיו',dad:'אבא'};
+  const COL={aviv:'#0B6F6B',roni:'#B8235A',hili:'#A34A0A',ziv:'#1F55B8'};
+  const actEx=pid=>{ try{ return (EXAMS[pid]||[]).filter(x=>!isArch(x)&&x.subj!=='dict'); }catch(e){ return []; } };
+  const subjName=ex=>{ try{ return SUBJ[ex.subj].n; }catch(e){ return (ex&&ex.title)||''; } };
+  const subjIc=ex=>{ try{ return SUBJ[ex.subj].i; }catch(e){ return '📘'; } };
+  const hubOpen=()=>{ const h=$('hub'); return !!h&&!h.classList.contains('hide'); };
+  const dl=id=>{ try{ return daysLeft(id); }catch(e){ return null; } };
+
+  /* ---------- רישום התשובות של הסבב (לנקודות ול-3 הדברים) ---------- */
+  const RUNLOG=[]; let RUN0=null;
+  const _tr=window.tRec;
+  if(typeof _tr==='function'){
+    window.tRec=function(game,it,ok,chosen,right){
+      const r=_tr.apply(this,arguments);
+      try{ let x=''; try{ x=itemText(it); }catch(e){ x=(it&&(it.q||it.x))||''; }
+        RUNLOG.push({ok:!!ok,x:clean(x),c:clean(right),t:Date.now(),g:game}); if(RUNLOG.length>80) RUNLOG.shift(); }catch(e){}
+      return r;
+    };
+  }
+
+  /* ---------- 9 · ●●● 20 נקודות התקדמות במקום "שאלה 7 מתוך 20" ---------- */
+  const CNT_RE=/^(?:שאלה|משפט|ניחוש|תרגיל|מילה)\s+(\d+)\s+מתוך\s+(\d+)/;
+  function paintDots(el){
+    const m=CNT_RE.exec((el.textContent||'').trim()); if(!m) return;
+    const i=+m[1], n=+m[2]; if(n<2||n>40||i<1||i>n) return;
+    const sig=i+'/'+n+'/'+RUNLOG.length;
+    if(el.dataset.tmd===sig) return; el.dataset.tmd=sig;
+    if(i===1||!RUN0||RUN0.n!==n||RUN0.el!==el.parentNode){ RUN0={n,el:el.parentNode,start:RUNLOG.length-(i-1),t:Date.now()}; }
+    const pg=el.previousElementSibling; if(pg&&/(^|\s)(tx-pg|m-prog)(\s|$)/.test(pg.className)) pg.classList.add('tm-hid');
+    el.classList.add('tm-hid');
+    let d=el.nextElementSibling; if(!d||!d.classList.contains('tm-dots')){ d=document.createElement('div'); d.className='tm-dots'; el.after(d); }
+    let h='';
+    for(let k=0;k<n;k++){
+      let c='';
+      if(k<i-1){ const r=RUNLOG[RUN0.start+k]; c=(RUN0.start>=0&&r)?(r.ok?'ok':'no'):'past'; }
+      else if(k===i-1) c='cur';
+      h+='<i class="'+c+'"></i>';
+    }
+    d.innerHTML=h; d.setAttribute('aria-label',(el.textContent||'').trim()); d.setAttribute('role','img');
+  }
+
+  /* ---------- 11 · 🌟 מסך סיום: 3 דברים שידעתי היום ---------- */
+  function three(endEl){
+    if(endEl.dataset.tm3l) return; endEl.dataset.tm3l='1';
+    const since=(RUN0&&Date.now()-RUN0.t<90*60000&&RUN0.start>=0)?RUN0.start:Math.max(0,RUNLOG.length-20);
+    const L=RUNLOG.slice(since).filter(r=>r.ok&&r.x&&Date.now()-r.t<90*60000);
+    RUN0=null;
+    if(!L.length) return;
+    const seen=new Set(), pick=[];
+    shuf(L).forEach(r=>{ if(pick.length<3&&!seen.has(r.x)){ seen.add(r.x); pick.push(r); } });
+    const line=r=>{
+      let q=r.x.replace(/^נכון או לא נכון\?\s*/,''), a=r.c;
+      const tf=/^נכון או לא נכון\?/.test(r.x)||/^(נכון|לא נכון)/.test(a);
+      if(q.length>80) q=q.slice(0,78)+'…';
+      if(tf) return E(q)+' — <b>'+(/^לא/.test(a)?'לא נכון ✗':'נכון ✓')+'</b>';
+      return E(q)+(a?' ← <b>'+E(a.length>50?a.slice(0,48)+'…':a)+'</b>':'');
+    };
+    const c=document.createElement('div'); c.className='tm-3l';
+    c.innerHTML='<h4>🌟 '+(pick.length===1?'דבר אחד':pick.length+' דברים')+' שידעת היום</h4><ul>'+pick.map(r=>'<li>'+line(r)+'</li>').join('')+'</ul>';
+    const btn=endEl.querySelector('button,.m-btns'); if(btn) btn.before(c); else endEl.appendChild(c);
+  }
+
+  /* ---------- 12 · ⚑ דגל קטן בכל שאלה ---------- */
+  function flagIn(card){
+    if(card.querySelector(':scope > .tm-flg')) return;
+    if(!(window.TM_FLAGS&&TM_FLAGS.sheet)) return;
+    const b=document.createElement('button'); b.type='button'; b.className='tm-flg'; b.textContent='⚑'; b.setAttribute('aria-label','יש פה טעות?'); b.title='יש פה טעות?';
+    b.onclick=ev=>{ ev.stopPropagation(); const P=prof(); if(!P) return;
+      const qEl=card.querySelector('.tx-big,.m-ins,.q-text,.m-q,h3'); const x=clean(qEl?qEl.innerHTML:card.textContent).slice(0,200);
+      const okB=card.querySelector('.tx-opt.ok,.ok'); let ex=''; try{ ex=(CUR_EXAM&&CUR_EXAM.id)||''; }catch(e){}
+      TM_FLAGS.sheet({pid:P.id,g:'q',x,c:okB?clean(okB.textContent):'',a:'',ok:null,ex,t:Date.now()}); };
+    card.classList.add('tm-flg-host'); card.appendChild(b);
+  }
+
+  /* סורק אחד לכל המסכים (מהיר — רק אחרי שינוי) */
+  let scanT=0;
+  function scan(){
+    scanT=0;
+    document.querySelectorAll('.tx-cnt,.m-qc,.q-count').forEach(paintDots);
+    document.querySelectorAll('.tx-end,.m-res').forEach(el=>{ if(el.offsetParent!==null&&!el.closest('#tmMorn')) three(el); });
+    document.querySelectorAll('#txIn .tx-card').forEach(c=>{ if(c.querySelector('.tx-big')&&(c.querySelector('.tx-opts')||$('txShow'))&&!c.classList.contains('tm-we')&&!c.classList.contains('tx-end')) flagIn(c); });
+    document.querySelectorAll('#bQ,#kQ,#hQ').forEach(flagIn);
+    clkCheck();
+  }
+  new MutationObserver(()=>{ if(!scanT) scanT=requestAnimationFrame(scan); }).observe(document.body,{childList:true,subtree:true,characterData:true});
+
+  /* ---------- 2 · 🎓 מבחן דמה (יומיים-שלושה לפני בחינה) ---------- */
+  function poolFor(pid,ex){
+    let P=[];
+    try{
+      if(ex.type==='up'&&window.TM_UP&&TM_UP.pool) P=TM_UP.pool(pid,ex.id).map(it=>({c:Object.assign({},it.c,{g:'mock'}),opts:it.opts}));
+      else if(window.TM_POOL) P=TM_POOL(pid,ex,null).map(q=>({c:{key:'mk:'+ex.id+':'+q.q.slice(0,60),q:q.q,c:q.c,tp:q.tp||'',g:'mock',ex:ex.id},opts:shuf(q.opts)}));
+    }catch(e){ P=[]; }
+    /* גם שאלות שהיא כבר פגשה בבחינה הזאת */
+    try{ const C=S().cards(pid); C.list.filter(c=>c.ex===ex.id).forEach(c=>{ if(P.some(p=>p.c.q===c.q)) return; const o=S().optsFor(c,C.byTp); if(o) P.push({c,opts:o}); }); }catch(e){}
+    const seen=new Set(); return P.filter(p=>p&&p.c&&p.c.q&&p.c.c&&!seen.has(p.c.q)&&seen.add(p.c.q));
+  }
+  function mockExam(pid){
+    let best=null;
+    actEx(pid).forEach(ex=>{ const n=dl(ex.id); if(n!=null&&n>=1&&n<=3&&(!best||n<best.n)) best={ex,n}; });
+    if(!best) return null;
+    if(best.ex.type==='math') return best;
+    return poolFor(pid,best.ex).length>=8?best:null;
+  }
+  const MOCK_MIN=45;
+  let CLK=null;
+  function clkStart(){ CLK={t0:Date.now()}; let c=$('tmClk'); if(!c){ c=document.createElement('div'); c.id='tmClk'; document.body.appendChild(c); } c.classList.add('show'); clkTick(); CLK.iv=setInterval(clkTick,1000); }
+  function clkMs(){ return CLK?Date.now()-CLK.t0:0; }
+  const mmss=ms=>{ const s=Math.floor(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+  function clkTick(){ const c=$('tmClk'); if(!c||!CLK) return; const ms=clkMs(); c.textContent='⏱ '+mmss(ms)+' / '+MOCK_MIN+':00'; c.classList.toggle('late',ms>MOCK_MIN*60000); }
+  function clkStop(){ if(!CLK) return; clearInterval(CLK.iv); const ms=clkMs(); CLK=null; const c=$('tmClk'); if(c) c.classList.remove('show'); return ms; }
+  function clkCheck(){
+    if(!CLK) return;
+    if(hubOpen()&&!document.querySelector('#txOv.show')) { clkStop(); return; }
+    if(CLK.math&&document.querySelector('.m-res')) clkStop();
+  }
+  function saveMock(pid,ex,ms,sc){ try{ if(!pid||!ex) return; ls('tm_mock_'+pid+'_'+ex.id,JSON.stringify({sc,ms,t:Date.now()})); }catch(e){} }
+  function lastMock(pid,ex){ try{ return JSON.parse(lg('tm_mock_'+pid+'_'+ex.id)||'null'); }catch(e){ return null; } }
+  function startMock(){
+    const P=prof(); if(!P) return; const m=mockExam(P.id); if(!m) return; const ex=m.ex;
+    if(ex.type==='math'){
+      try{ S().close(); }catch(e){}
+      try{ window.enterExam(ex.id); }catch(e){}
+      setTimeout(()=>{ try{ mExam(true); clkStart(); CLK.math=1; CLK.pid=P.id; }catch(e){} },120);
+      return;
+    }
+    const items=shuf(poolFor(P.id,ex)).slice(0,20);
+    try{ CUR_EXAM=ex; }catch(e){}
+    clkStart();
+    S().run({title:'🎓 מבחן דמה · '+E(subjName(ex)),items,game:'mock',back:()=>{ clkStop(); S().close(); },onEnd:r=>{
+      const ms=clkStop()||0, sc=Math.round(100*r.ok/r.n);
+      saveMock(P.id,ex,ms,sc);
+      try{ if(sc>=85) mConfetti(); }catch(e){}
+      const box=$('txIn');
+      box.innerHTML=S().bar('🎓 מבחן דמה')+'<div class="tx-card tx-end"><div class="e">'+(sc>=85?'🏆':sc>=70?'⭐':'💪')+'</div><h3>הציון שלך: '+sc+'</h3>'+
+        '<p>'+r.ok+' נכון מתוך '+r.n+' · ⏱ '+mmss(ms)+'</p>'+
+        '<p>'+(sc>=85?'את מוכנה לבחינה! 🌟':sc>=70?'כמעט שם. עוד חזרה קטנה 💪':'טוב שבדקת! הטעויות יחזרו מחר 🔁')+'</p>'+
+        '<button type="button" class="tx-next" id="mkDone">סיום</button></div>';
+      S().wireBar(()=>S().close()); $('mkDone').onclick=()=>S().close();
+    }});
+  }
+
+  /* ---------- 7 · ☀️ בוקר הבחינה — כפתור אחד ---------- */
+  function examToday(pid){ return actEx(pid).find(ex=>dl(ex.id)===0)||null; }
+  const mornSkipK=pid=>'tm_morn_'+pid+'_'+dk();
+  function mornItems(pid,ex){
+    const out=[], seen=new Set();
+    try{ const C=S().cards(pid);
+      /* קודם: מה שטעתה בו פעם — הכי חשוב לחזור עליו */
+      C.list.filter(c=>c.ex===ex.id&&c.wr&&c.wr.size).sort((a,b)=>(a.ok/a.n)-(b.ok/b.n)).forEach(c=>{ if(out.length<10&&!seen.has(c.q)){ seen.add(c.q); out.push({c,rv:0,opts:null}); } });
+    }catch(e){}
+    shuf(poolFor(pid,ex)).forEach(p=>{ if(out.length<10&&!seen.has(p.c.q)){ seen.add(p.c.q); out.push({c:p.c,rv:0,opts:null}); } });
+    return out;
+  }
+  function morning(){
+    const P=prof(), hb=$('hubBox'); if(!P||!hb||!hubOpen()) return;
+    const ex=examToday(P.id), on=!!ex&&!lg(mornSkipK(P.id))&&new Date().getHours()<16;
+    let w=$('tmMorn');
+    if(!on){ if(w) w.remove(); hb.classList.remove('tm-morn-on'); return; }
+    const items=mornItems(P.id,ex);
+    if(!w){ w=document.createElement('div'); w.id='tmMorn'; hb.prepend(w); }
+    const sig=ex.id+'|'+items.length; if(w.dataset.sig!==sig){
+      w.dataset.sig=sig;
+      w.innerHTML='<div class="sun">☀️</div><h2>היום הבחינה ב'+E(subjName(ex))+'!</h2><p>בהצלחה '+E(P.name||'')+' 🍀</p>'+
+        (items.length>=3?'<button type="button" class="go" id="mnGo">חזרה אחרונה<br><small style="font-size:1rem;font-weight:700">5 דקות · '+items.length+' דברים חשובים</small></button>':'')+
+        '<button type="button" class="skip" id="mnSkip">למסך הרגיל</button>';
+      $('mnSkip').onclick=()=>{ ls(mornSkipK(P.id),'1'); morning(); };
+      if($('mnGo')) $('mnGo').onclick=()=>{
+        try{ CUR_EXAM=ex; }catch(e){}
+        S().run({title:'☀️ חזרה אחרונה',items:mornItems(P.id,ex),game:'morn',back:()=>S().close(),onEnd:r=>{
+          ls(mornSkipK(P.id),'1');
+          const box=$('txIn');
+          box.innerHTML=S().bar('☀️ חזרה אחרונה')+'<div class="tx-card tx-end"><div class="e">🍀</div><h3>את מוכנה!</h3><p>נושמות עמוק, קוראות כל שאלה עד הסוף. בהצלחה!</p><button type="button" class="tx-next" id="mnEnd">סיום</button></div>';
+          S().wireBar(()=>S().close()); $('mnEnd').onclick=()=>S().close();
+        }});
+      };
+    }
+    const nav=hb.querySelector('.hub-nav');
+    if(nav){ if(nav.nextElementSibling!==w) nav.after(w); } else if(hb.firstElementChild!==w) hb.prepend(w);
+    hb.classList.add('tm-morn-on');
+  }
+
+  /* כפתורים במסך של הילדה: מבחן דמה + תזכורות */
+  function hubExtra(){
+    const P=prof(), hb=$('hubBox'); if(!P||!hb||!hubOpen()) return;
+    morning();
+    /* 🎓 מבחן דמה */
+    const m=KIDS.includes(P.id)?mockExam(P.id):null; let b=$('tmMock');
+    if(!m){ if(b) b.remove(); }
+    else{
+      if(!b){ b=document.createElement('button'); b.type='button'; b.id='tmMock'; b.className='tm-hb'; b.onclick=startMock; }
+      const lm=lastMock(P.id,m.ex), when=m.n===1?'מחר':m.n===2?'עוד יומיים':'עוד 3 ימים';
+      const h='<span class="ic">🎓</span><span style="flex:1">מבחן דמה · '+E(subjName(m.ex))+'<small>'+(lm&&lm.sc!=null&&Date.now()-lm.t<4*864e5?'בפעם הקודמת: '+lm.sc+' · עוד פעם?':'20 שאלות עם שעון · הבחינה '+when)+'</small></span>';
+      if(b.innerHTML!==h) b.innerHTML=h;
+      const anchor=$('tmEve')||$('tmResume'); const grid=hb.querySelector('.hub-grid');
+      if(anchor&&anchor.parentNode){ if(anchor.nextElementSibling!==b) anchor.after(b); }
+      else if(grid){ if(grid.previousElementSibling!==b) grid.before(b); }
+    }
+    pushBtn();
+  }
+  setInterval(hubExtra,1500);
+  if(typeof window.showHub==='function'){ const _sh=window.showHub; window.showHub=function(){ const r=_sh.apply(this,arguments); try{ hubExtra(); }catch(e){} return r; }; }
+
+  /* ---------- 5 + 6 · 🧠 טריק לזכור: ראשי תיבות + סיפור שמחבר ---------- */
+  const TRICKS=[
+    { m:(ex,t)=>/^up-(roni|hili)-hist/.test(ex.id)||/מבוא להיסטוריה/.test(t),
+      items:[
+        {k:'acr',t:'6 תחומי החיים',w:'כתב פח״ד',L:[['כ','כלכלי'],['ת','תרבותי (חינוכי)'],['ב','ביטחוני (צבאי)'],['פ','פוליטי (מדיני)'],['ח','חברתי'],['ד','דתי']],s:'דמייני מכתב מפחיד 📜😱 — וכל אות בו היא תחום.'},
+        {k:'story',t:'5 המאפיינים של אירוע היסטורי',s:'לפני הרבה שנים (עבר 🕰️), המון אנשים (הרבה אנשים 👥) קמו בבוקר וראו שהכול השתנה (שינוי 🔄). השינוי נגע בכסף, בצבא ובחגים (תחומים 🗂️). ומאז כולם אומרים: "זה היה לפני" ו"זה היה אחרי" (לפני ואחרי ⏮️⏭️).'},
+        {k:'story',t:'3 התקופות לפי הסדר',s:'סבתא רבתא מהתקופה העתיקה 👵 (עד 600 בערך) מספרת סיפור לאביר מימי הביניים 🏰 (600 עד 1500 בערך). האביר מספר אותו הלאה לנו, בעת החדשה 🚀 (מ-1500 בערך ועד היום).'}
+      ]},
+    { m:ex=>ex.id==='aviv-torah-chesed-1',
+      items:[
+        {k:'story',t:'4 המצוות — סיפור על יום אחד',s:'אביב יוצאת מהבית. קודם היא מבקרת את סבתא החולה 🤒 (ביקור חולים). בדרך היא שמה מטבע בקופה 🪙 (צדקה). בבית מחכים אורחים, והיא מגישה להם עוגה 🍰 (הכנסת אורחים). בערב היא הולכת עם אמא לנחם שכנה עצובה 🤍 (ניחום אבלים).'}
+      ]},
+    { m:(ex,t)=>/\bin\b[^a-z]+\bon\b[^a-z]+\bat\b/i.test(t),
+      items:[
+        {k:'story',t:'in · on · at — המשפך 🔻',s:'בזמן — מהגדול לקטן:\nIN — הכי גדול: שנה, חודש, עונה (in 2026, in May, in winter).\nON — יום ותאריך (on Monday, on 5 May).\nAT — הכי קטן, שעה (at 5 o\'clock, at night).\n\nבמקום:\nIN — בתוך (in the box, in Israel).\nON — על משטח (on the table, on the wall).\nAT — בנקודה (at school, at home).'}
+      ]}
+  ];
+  function exTxt(pid,ex){
+    let t=(ex.title||'')+' '+subjName(ex);
+    try{ if(window.TM_UP&&TM_UP.ready) TM_UP.ready(pid,ex.id).forEach(r=>{ t+=' '+((r.mat&&r.mat.title)||''); ((r.mat&&r.mat.topics)||[]).forEach(x=>t+=' '+(x.t||'')); }); }catch(e){}
+    return t;
+  }
+  function tricksFor(exId){
+    const P=prof(); if(!P) return [];
+    const ex=(EXAMS[P.id]||[]).find(x=>x.id===exId); if(!ex) return [];
+    const t=exTxt(P.id,ex), out=[];
+    TRICKS.forEach(T=>{ try{ if(T.m(ex,t)) out.push(...T.items); }catch(e){} });
+    return out;
+  }
+  window.TM_TRICK_HAS=exId=>tricksFor(exId).length>0;
+  window.TM_TRICK_BTN=exId=>tricksFor(exId).length?'<button type="button" class="mm-btn" data-trick="'+E(exId)+'"><span class="mm-ic">🧠</span><span><b>טריק לזכור</b><small>ראשי תיבות וסיפור</small></span></button>':'';
+  function openTricks(exId){
+    const L=tricksFor(exId); if(!L.length) return;
+    let o=$('tkOv2'); if(!o){ o=document.createElement('div'); o.className='ov'; o.id='tkOv2'; o.innerHTML='<div class="ov-box" id="tkBox2"></div>'; o.addEventListener('click',e=>{ if(e.target===o){ o.classList.remove('show'); try{ speechSynthesis.cancel(); }catch(x){} } }); document.body.appendChild(o); }
+    $('tkBox2').innerHTML='<h2>🧠 טריק לזכור</h2>'+L.map((x,i)=>'<div class="tk-c"><h3>'+(x.k==='acr'?'🔤 ':'📖 ')+E(x.t)+'</h3>'+
+      (x.k==='acr'?'<div class="tk-w">'+E(x.w)+'</div><div class="tk-l">'+x.L.map(l=>'<b>'+E(l[0])+'</b><span>'+E(l[1])+'</span>').join('')+'</div>'+(x.s?'<p class="tk-s" style="margin-top:8px">'+E(x.s)+'</p>':'')
+        :'<p class="tk-s">'+E(x.s).replace(/\n/g,'<br>')+'</p>')+
+      '<button type="button" data-tks="'+i+'">🔊 להקשיב</button></div>').join('')+
+      '<div class="ov-row"><button type="button" class="pri" id="tkX2">סגירה</button></div>';
+    $('tkX2').onclick=()=>{ o.classList.remove('show'); try{ speechSynthesis.cancel(); }catch(e){} };
+    $('tkBox2').querySelectorAll('[data-tks]').forEach(b=>b.onclick=()=>{ const x=L[+b.dataset.tks];
+      const txt=x.t+'. '+(x.k==='acr'?x.w.replace('״','')+'. '+x.L.map(l=>l[0]+' — '+l[1].replace(/\(.*?\)/g,'')).join('. ')+'. ':'')+(x.s||'').replace(/[\n]/g,'. ').replace(/[()]/g,' ');
+      try{ kSpeak(txt); }catch(e){} });
+    o.classList.add('show'); o.scrollTop=0;
+  }
+  document.addEventListener('click',ev=>{ const b=ev.target.closest&&ev.target.closest('[data-trick]'); if(!b) return; ev.preventDefault(); ev.stopPropagation(); openTricks(b.dataset.trick); },true);
+  /* בחומר שהועלה: הכפתור מעל רשימת הנושאים */
+  setInterval(()=>{
+    const box=$('txIn'); if(!box||!$('upAll')||box.querySelector('[data-trick]')) return;
+    let ex=null; try{ ex=CUR_EXAM; }catch(e){} if(!ex) return;
+    const h=TM_TRICK_BTN(ex.id); if(!h) return;
+    const card=$('upAll').closest('.tx-card'); if(card) card.insertAdjacentHTML('afterend','<div style="margin:0 0 12px">'+h+'</div>');
+  },700);
+
+  /* ---------- 10 · 📲 אייקון אישי במסך הבית ---------- */
+  function applyIcon(){
+    const L=lg('tm_lock'); if(!COL[L]) return;
+    const set=(sel,attr,v)=>{ const el=document.querySelector(sel); if(el&&el.getAttribute(attr)!==v) el.setAttribute(attr,v); };
+    set('link[rel=manifest]','href','manifest-'+L+'.webmanifest');
+    set('link[rel=apple-touch-icon]','href','apple-touch-icon-'+L+'.png');
+    set('link[rel=icon]','href','icon-'+L+'-192.png');
+    set('meta[name=apple-mobile-web-app-title]','content',NM[L]);
+  }
+  applyIcon(); setInterval(applyIcon,3000);
+
+  /* ---------- 13 · 💾 שמירה בלי אינטרנט ----------
+     התשובות תמיד נשמרות קודם בטלפון. כאן: אם האפליקציה נפתחה בלי רשת, מתחברים לענן ברגע שהרשת חוזרת ושולחים הכול. */
+  let tryingDb=false;
+  async function reconnect(){
+    if(tryingDb) return; tryingDb=true;
+    try{
+      if(typeof DB==='undefined') return;
+      if(!DB&&window.claude&&navigator.onLine!==false){
+        const d=await window.claude.use('db');
+        if(d&&!DB){ DB=d; CLOUD.state='on'; CLOUD.fails=0; try{ await datesPull(); }catch(e){} try{ window.tmArchPull&&tmArchPull(); }catch(e){} }
+      }
+      if(DB&&CLOUD.state==='on'&&Object.keys(_dirtyGet()).length){ CLOUD.fails=0; await cloudFlush(); }
+    }catch(e){} finally{ tryingDb=false; offChip(); }
+  }
+  function offChip(){
+    let c=$('tmOff'); if(!c){ c=document.createElement('div'); c.id='tmOff'; document.body.appendChild(c); }
+    let pend=0; try{ pend=Object.keys(_dirtyGet()).length; }catch(e){}
+    const off=navigator.onLine===false;
+    /* יש כבר הודעה "אין חיבור" במסך של הילדה — כאן לא מציגים עוד אחת */
+    c.textContent=''; c.classList.remove('show');
+  }
+  addEventListener('online',()=>{ reconnect(); });
+  addEventListener('offline',offChip);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) reconnect(); });
+  setInterval(()=>{ offChip(); try{ if(navigator.onLine!==false&&(!DB||Object.keys(_dirtyGet()).length)) reconnect(); }catch(e){} },30000);
+
+  /* ---------- 14 · 🔔 תזכורות לבחינות גם כשהאפליקציה סגורה ----------
+     Web Push רגיל (חינם). שרת: GitHub Actions (.github/workflows/reminders.yml) — כל בוקר ב-07:30 ובערב ב-17:00. */
+  const VAPID='BDNFkqbqJJVyrZhkyDFzoOGlOTDOo3f1fVQNhorq_d7wQkUpUzdMz_If7stfDjGYUDnQHNfnRofK_EW6bq4wWXg';
+  const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+  const iosNotInstalled=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches);
+  const b64=s=>{ const p='='.repeat((4-s.length%4)%4), b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')); const a=new Uint8Array(b.length); for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; };
+  const subKey=who=>'tm_push_'+who;
+  async function subscribe(who,ask){
+    if(!pushOK()) return 'no';
+    if(Notification.permission==='denied') return 'denied';
+    if(Notification.permission!=='granted'){ if(!ask) return 'ask'; const p=await Notification.requestPermission(); if(p!=='granted') return p; }
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(VAPID)});
+    const j=sub.toJSON(), id=(who+'-'+(j.keys&&j.keys.auth||'x')).replace(/[^\w-]/g,'').slice(0,60);
+    const D=db(); if(!D) return 'nodb';
+    try{ await D.doc('push/'+id).set({who,sub:j,at:Date.now(),ua:navigator.userAgent.slice(0,80)}); ls(subKey(who),id); return 'ok'; }catch(e){ return 'err'; }
+  }
+  function pushBtn(){
+    const P=prof(), hb=$('hubBox'); if(!P||!hb||!KIDS.includes(P.id)) return;
+    let b=$('tmPushBtn');
+    const need=pushOK()&&!iosNotInstalled()&&Notification.permission!=='denied'&&!lg(subKey(P.id))&&!lg('tm_push_no_'+P.id);
+    if(!need){ if(b) b.remove(); return; }
+    if(Notification.permission==='granted'){ subscribe(P.id,false).catch(()=>{}); return; }
+    if(!b){ b=document.createElement('button'); b.type='button'; b.id='tmPushBtn'; b.className='tm-hb';
+      b.innerHTML='<span class="ic">🔔</span><span style="flex:1">להפעיל תזכורות לבחינות<small>גם כשהאפליקציה סגורה</small></span>';
+      b.onclick=async()=>{ b.disabled=true; const r=await subscribe(P.id,true).catch(()=>'err');
+        if(r==='ok'){ b.innerHTML='<span class="ic">✅</span><span style="flex:1">התזכורות פועלות</span>'; setTimeout(()=>b.remove(),2500); }
+        else if(r==='nodb'||r==='err'){ b.disabled=false; b.querySelector('small').textContent='אין אינטרנט. נסי שוב'; }
+        else { ls('tm_push_no_'+P.id,'1'); b.remove(); } }; }
+    const grid=hb.querySelector('.hub-grid'), foot=hb.querySelector('.hub-foot');
+    if(foot&&foot.previousElementSibling!==b) foot.before(b); else if(!foot&&grid&&grid.nextElementSibling!==b) grid.after(b);
+  }
+  /* אזור הורים: גם הטלפון של ההורה מקבל את כל התזכורות */
+  if(typeof showDash==='function'){
+    const _sd=showDash;
+    showDash=async function(){
+      const p=_sd.apply(this,arguments);
+      const add=()=>{ const top=document.querySelector('#parentBox .dash-top'); if(!top||$('dPush')||!pushOK()) return;
+        const b=document.createElement('button'); b.type='button'; b.id='dPush'; b.textContent=lg(subKey('parent'))?'🔔 תזכורות פועלות ✓':'🔔 תזכורות לטלפון שלי';
+        b.onclick=async()=>{ if(iosNotInstalled()){ b.textContent='📲 קודם להוסיף למסך הבית'; return; } b.textContent='⏳'; const r=await subscribe('parent',true).catch(()=>'err'); b.textContent=r==='ok'?'🔔 תזכורות פועלות ✓':(r==='nodb'||r==='err')?'🔔 אין אינטרנט, לנסות שוב':'🔕 לא אושר בטלפון'; };
+        top.appendChild(b); };
+      add(); const bx=$('parentBox'); if(bx){ const mo=new MutationObserver(add); mo.observe(bx,{childList:true}); setTimeout(()=>mo.disconnect(),20000); }
+      return p;
+    };
+  }
+  /* השרת צריך לדעת איך קוראים לכל בחינה */
+  async function pushNames(){
+    const D=db(); if(!D){ setTimeout(pushNames,5000); return; }
+    const map={};
+    try{ KIDS.forEach(pid=>(EXAMS[pid]||[]).forEach(x=>{ map[x.id]={pid,n:subjName(x),i:subjIc(x)}; })); }catch(e){ return; }
+    const j=JSON.stringify(map); if(lg('tm_push_names')===j) return;
+    try{ await D.doc('meta/examNames').set({map,up:Date.now()}); ls('tm_push_names',j); }catch(e){}
+  }
+  setTimeout(pushNames,8000); setInterval(pushNames,10*60000);
 })();
 </script>
 

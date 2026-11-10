@@ -1,0 +1,25 @@
+# teach-me — תזכורות לבחינות לטלפונים (10.11.2026)
+# 05:30 UTC = 07:30 בחורף בישראל ("בהצלחה היום") · 15:00 UTC = 17:00 ("מחר" / "עוד יומיים")
+name: exam-reminders
+on:
+  schedule:
+    - cron: '30 5 * * *'
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'morning / evening'
+        required: false
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --no-save web-push@3
+      - run: node scripts/remind.mjs
+        env:
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          MODE: ${{ github.event.inputs.mode }}
