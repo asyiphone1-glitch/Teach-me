@@ -2318,6 +2318,10 @@ function loadStep(){
   }
 
   if (session.mode === 'listen'){
+    /* 11.11.2026: המילה באנגלית כתובה על המסך; שומעים אותה רק בלחיצה על 🔊 */
+    document.getElementById('play-hint').textContent = 'רוצה לשמוע? לוחצים על 🔊';
+    document.getElementById('hint-area').innerHTML =
+      `<div class="translation-hint" style="direction:ltr;font-family:'Fredoka',sans-serif;font-size:34px;font-weight:700;">${word.en}</div>`;
     const distractors = shuffle(distractPool().filter(w=>w.en!==word.en)).slice(0,3);
     const options = shuffle([word, ...distractors]);
     content.innerHTML = `<div class="options-grid">` +
