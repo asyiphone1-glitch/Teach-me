@@ -1238,6 +1238,7 @@ html.vocab-only #doll-mini,html.vocab-only .doll-panel,html.vocab-only .ms-write
     <div class="top-bar">
       <button class="back-btn" onclick="goHome()">‹ חזרה</button>
       <div class="fc-count" id="fc-count"></div>
+      <button type="button" class="fc-undo" id="fc-undo" onclick="fcUndo()" style="display:none" aria-label="חזרה לכרטיס הקודם">↩ הקודם</button>
     </div>
     <div id="fc-play">
       <div class="fc-bar"><i id="fc-bar"></i></div>
@@ -4392,6 +4393,9 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden && hr.want
 .mt-flash b{font-size:19px;}
 .mt-flash small{display:block;font-size:13px;color:var(--ink-soft);font-weight:500;}
 .fc-count{font-weight:800;color:var(--ink-soft);font-size:15px;}
+#screen-flash .top-bar{gap:10px;}
+.fc-undo{margin-inline-start:auto;padding:7px 12px;border-radius:999px;border:2px solid #E1D6BF;background:#fff;color:#3A2E22;font-family:'Heebo',sans-serif;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;}
+.fc-undo:active{transform:scale(.95);}
 .fc-bar{height:8px;background:#EFE7D6;border-radius:99px;overflow:hidden;margin:6px 0 16px;}
 .fc-bar i{display:block;height:100%;width:0;background:#F59E0B;transition:width .3s ease;}
 .fc-scene{perspective:1100px;}
@@ -4867,6 +4871,52 @@ html.fc-lock #fc-next-btns{flex:0 0 auto;}
   fix(document.body);
   new MutationObserver(ms=>ms.forEach(m=>{ if(m.type==='characterData') fix(m.target); else m.addedNodes.forEach(fix); }))
     .observe(document.body,{childList:true,subtree:true,characterData:true});
+})();
+</script>
+<script>
+/* ↩ חזרה לכרטיס הקודם (11.11.2026, לבקשת ההורה): סימנתי בטעות "יודעת" (או "לא יודעת")?
+   לוחצים — התשובה האחרונה מתבטלת והכרטיס חוזר, ואפשר לענות מחדש. אפשר ללחוץ כמה פעמים. */
+(function(){
+  let HIST=[];
+  const btn=()=>document.getElementById('fc-undo');
+  function upd(){ const b=btn(); if(b) b.style.display=HIST.length&&document.getElementById('screen-flash').classList.contains('active')?'':'none'; }
+  const _st=startFlash;
+  startFlash=function(){ HIST=[]; const r=_st.apply(this,arguments); upd(); return r; };
+  const _ch=fcChoose;
+  fcChoose=function(){ HIST=[]; const r=_ch.apply(this,arguments); upd(); return r; };
+  const _an=fcAnswer;
+  fcAnswer=function(knows){
+    if(FC.busy) return _an.apply(this,arguments);
+    const w=FC.list[FC.i];
+    const snap=w?{i:FC.i,w,knows:!!knows,kn:FC.known.length,un:FC.unknown.length,rep:FC.rep.length,len:FC.list.length,
+      had:fcKnown().includes(w.en),mc:getMistakeCounts()[w.en],lv:w.lv,due:w.due,stars:totalStars}:null;
+    const r=_an.apply(this,arguments);
+    if(snap){ HIST.push(snap); if(HIST.length>60) HIST.shift(); }
+    upd(); return r;
+  };
+  const _en=fcEnd;
+  fcEnd=function(){ const r=_en.apply(this,arguments); upd(); return r; };
+  window.fcUndo=function(){
+    const s=HIST.pop(); if(!s) return;
+    if(FC.timer){ clearTimeout(FC.timer); FC.timer=null; }
+    FC.known.length=s.kn; FC.unknown.length=s.un; FC.rep.length=s.rep; FC.list.length=s.len;
+    { const k=fcKnown(), j=k.indexOf(s.w.en);
+      if(!s.had&&j>-1){ k.splice(j,1); fcSaveKnown(k); }
+      else if(s.had&&j<0){ k.push(s.w.en); fcSaveKnown(k); } }
+    try{ const c=getMistakeCounts(); if(s.mc==null) delete c[s.w.en]; else c[s.w.en]=s.mc; localStorage.setItem('mistake-counts-'+activeProfile,JSON.stringify(c)); }catch(e){}
+    totalStars=s.stars;
+    if(s.lv!==s.w.lv||s.due!==s.w.due){   /* אבא: מחזירים גם את לוח החזרות */
+      s.w.lv=s.lv; s.w.due=s.due;
+      try{ if(document.documentElement.classList.contains('vocab-only')) parent.postMessage({tm:'dadSrs',en:s.w.en,lv:s.lv||0,due:s.due||0},'*'); }catch(e){}
+    }
+    FC.i=s.i; FC.busy=false;
+    document.getElementById('fc-end').style.display='none';
+    document.getElementById('fc-play').style.display='';
+    try{ document.documentElement.classList.add('fc-lock'); }catch(e){}
+    fcShow(); upd();
+  };
+  const _sh=showScreen;
+  showScreen=function(){ const r=_sh.apply(this,arguments); upd(); return r; };
 })();
 </script>
 </body>
