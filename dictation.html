@@ -1765,8 +1765,70 @@ const WORDS_RONI_HILI_2 = [
   { en:"what about", he:"מה לגבי...?", icon:"🤷" },
   { en:"would you like", he:"האם תרצה/תרצי...?", icon:"🙏" }
 ];
+/* 11.11.2026: Aviv's Vocabulary Unit 1 (2 pages, 59 words) — the current list. Her previous list moves to her archive. */
+const WORDS_AVIV_UNIT1 = [
+  { en:"a lot of",    he:"הרבה",              icon:"🔢" },
+  { en:"also",        he:"גם",                icon:"➕" },
+  { en:"far",         he:"רחוק",              icon:"🔭" },
+  { en:"goal",        he:"מטרה / גול",        icon:"🥅" },
+  { en:"hobby",       he:"תחביב",             icon:"🎨" },
+  { en:"Israel",      he:"ישראל",             icon:"🇮🇱" },
+  { en:"kick",        he:"לבעוט",             icon:"⚽" },
+  { en:"piano",       he:"פסנתר",             icon:"🎹" },
+  { en:"play",        he:"לשחק / לנגן",       icon:"🎮" },
+  { en:"song",        he:"שיר",               icon:"🎶" },
+  { en:"subject",     he:"מקצוע / נושא",      icon:"📚" },
+  { en:"about",       he:"על / בנושא",        icon:"💬" },
+  { en:"classroom",   he:"כיתה",              icon:"🏫" },
+  { en:"dining room", he:"חדר אוכל",          icon:"🍽️" },
+  { en:"every",       he:"כל",                icon:"♾️" },
+  { en:"forty",       he:"ארבעים (40)",       icon:"4️⃣" },
+  { en:"other",       he:"אחר",               icon:"🔀" },
+  { en:"special",     he:"מיוחד",             icon:"🌟" },
+  { en:"student",     he:"תלמיד",             icon:"🎒" },
+  { en:"study",       he:"ללמוד",             icon:"📖" },
+  { en:"their",       he:"שלהם",              icon:"👨‍👩‍👧" },
+  { en:"trip",        he:"טיול",              icon:"🚌" },
+  { en:"wait",        he:"לחכות",             icon:"⏳" },
+  { en:"age",         he:"גיל",               icon:"🎂" },
+  { en:"bathroom",    he:"חדר אמבטיה",        icon:"🛁" },
+  { en:"building",    he:"בניין",             icon:"🏢" },
+  { en:"flat",        he:"דירה",              icon:"🏠" },
+  { en:"guitar",      he:"גיטרה",             icon:"🎸" },
+  { en:"her",         he:"שלה / אותה",        icon:"👧" },
+  { en:"like",        he:"לאהוב / כמו",       icon:"👍" },
+  { en:"same",        he:"אותו דבר / זהה",    icon:"🟰" },
+  { en:"sofa",        he:"ספה",               icon:"🛋️" },
+  { en:"soon",        he:"בקרוב",             icon:"⏰" },
+  { en:"teach",       he:"ללמד",              icon:"👩‍🏫" },
+  { en:"toilet",      he:"שירותים / אסלה",    icon:"🚽" },
+  { en:"candy",       he:"סוכריה / ממתק",     icon:"🍬" },
+  { en:"date",        he:"תאריך",             icon:"📅" },
+  { en:"do",          he:"לעשות",             icon:"🛠️" },
+  { en:"everyone",    he:"כולם",              icon:"👥" },
+  { en:"flour",       he:"קמח",               icon:"🌾" },
+  { en:"give",        he:"לתת",               icon:"🎁" },
+  { en:"July",        he:"יולי",              icon:"☀️" },
+  { en:"outside",     he:"בחוץ",              icon:"🌳" },
+  { en:"ready",       he:"מוכן",              icon:"✅" },
+  { en:"sweet",       he:"מתוק",              icon:"🍭" },
+  { en:"then",        he:"אז / אחר כך",       icon:"➡️" },
+  { en:"throw",       he:"לזרוק",             icon:"🤾" },
+  { en:"card",        he:"כרטיס / כרטיסייה",  icon:"🃏" },
+  { en:"end",         he:"סוף",               icon:"🏁" },
+  { en:"flower",      he:"פרח",               icon:"🌸" },
+  { en:"for",         he:"בשביל / עבור",      icon:"🎯" },
+  { en:"hear",        he:"לשמוע",             icon:"👂" },
+  { en:"I'm sorry",   he:"אני מצטער/ת / סליחה", icon:"🙏" },
+  { en:"market",      he:"שוק",               icon:"🧺" },
+  { en:"present",     he:"מתנה",              icon:"🎁" },
+  { en:"pretty",      he:"יפה",               icon:"💐" },
+  { en:"sell",        he:"למכור",             icon:"🏷️" },
+  { en:"thing",       he:"דבר / חפץ",         icon:"📦" },
+  { en:"village",     he:"כפר",               icon:"🏘️" }
+];
 const PROFILES = {
-  'אביב': { current: WORDS_AVIV_NEWEST, archive: ARCHIVE_WORDS_AVIV.concat(CURRENT_WORDS, WORDS_AVIV_NEW) },
+  'אביב': { current: WORDS_AVIV_UNIT1, archive: ARCHIVE_WORDS_AVIV.concat(CURRENT_WORDS, WORDS_AVIV_NEW, WORDS_AVIV_NEWEST).filter((w,i,a)=>!WORDS_AVIV_UNIT1.some(c=>c.en===w.en)&&a.findIndex(x=>x.en===w.en)===i) },
   'רוני': { current: WORDS_RONI_HILI_2, archive: WORDS_RONI_ELI },
   'הילי': { current: WORDS_RONI_HILI_2, archive: WORDS_RONI_ELI },
   'זיו':  { current: WORDS_ZIV_2, archive: WORDS_ZIV },
@@ -2148,6 +2210,13 @@ function initProfile(){
         const arch=[].concat(...(D.old||[]).map(l=>(l||[]).filter(ok).map(w=>({en:w.en,he:w.he,icon:w.icon||'📝'}))), P.current, P.archive)
           .filter(w=>!seen[w.en.toLowerCase()]&&(seen[w.en.toLowerCase()]=1));
         PROFILES[EMBED_PROFILE]={current:cur,archive:arch};
+      } else if ((D.old||[]).length){
+        /* 11.11.2026: הרשימה המובנית חדשה יותר — היא נשארת הנוכחית, ודפים שהועלו קודם עוברים לארכיון */
+        const P=PROFILES[EMBED_PROFILE], seen={};
+        P.current.forEach(w=>seen[w.en.toLowerCase()]=1);
+        P.archive.forEach(w=>seen[w.en.toLowerCase()]=1);
+        const more=[].concat(...D.old.map(l=>(l||[]).filter(ok).map(w=>({en:w.en,he:w.he,icon:w.icon||'📝'})))).filter(w=>!seen[w.en.toLowerCase()]&&(seen[w.en.toLowerCase()]=1));
+        PROFILES[EMBED_PROFILE]={current:P.current,archive:P.archive.concat(more)};
       }
     }
   }catch(e){}

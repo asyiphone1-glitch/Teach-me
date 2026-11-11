@@ -12028,6 +12028,12 @@ button:not(:disabled):active{filter:brightness(.93);}
 </style>
 <button type="button" id="upChip">📸 החומר החדש שהעלית</button>
 <script>
+/* 📝 רשימות הכתבה מובנות שנוספו בצ׳אט (id חדש = הכתבה פעילה מחדש, גם אם הקודמת סומנה אפורה) */
+window.TM_DICT_BUILTIN={
+  aviv:{id:'dict-aviv-20261111',at:Date.parse('2026-11-11T19:45:00+02:00'),n:59}  /* Vocabulary Unit 1 */
+};
+</script>
+<script>
 /* ================================================================
    📸 חומר חדש לבחינה (1.11.2026, לבקשת ההורה)
    - כל ילדה: "✨ עוד דברים" ← "📸 חומר חדש".
@@ -12499,6 +12505,9 @@ button:not(:disabled):active{filter:brightness(.93);}
     const L=all().filter(r=>r.pid===pid&&!r.hide&&r.st==='ready'&&r.mat&&Array.isArray(r.mat.words)&&r.mat.words.length&&((examById(pid,r.exam)||{}).subj||r.subj)==='dict');
     if(!L.length) return null;
     const pick=w=>({en:w.en,he:w.he,icon:w.icon||'📝'});
+    /* רשימה מובנית חדשה יותר מכל מה שהועלה — היא הנוכחית, וכל הדפים שהועלו עוברים לארכיון */
+    const BI=(window.TM_DICT_BUILTIN||{})[pid];
+    if(BI&&!(+(L[L.length-1].at||0)>BI.at)) return {cur:[],old:L.slice().reverse().map(r=>r.mat.words.map(pick))};
     return {cur:L[L.length-1].mat.words.map(pick),old:L.slice(0,-1).reverse().map(r=>r.mat.words.map(pick))};
   }
   window.TM_UP={openUp,openMat,practice,topics:topicsFor,all,parentView,dictLists,pool:poolOf,ready:readyFor};
@@ -13592,7 +13601,9 @@ button:not(:disabled):active{filter:brightness(.93);}
     let L=[];
     try{ L=(window.TM_UP&&TM_UP.all?TM_UP.all():[]).filter(r=>r.pid===pid&&!r.hide&&r.st==='ready'&&r.mat&&Array.isArray(r.mat.words)&&r.mat.words.length&&
       ((((EXAMS[pid]||[]).find(x=>x.id===r.exam))||{}).subj||r.subj)==='dict'); }catch(e){}
-    if(L.length){ const r=L[L.length-1]; const ex=(EXAMS[pid]||[]).find(x=>x.id===r.exam)||{id:r.exam,subj:'dict'}; return {ex,n:r.mat.words.length}; }
+    const BI=(window.TM_DICT_BUILTIN||{})[pid];
+    if(L.length&&!(BI&&!(+(L[L.length-1].at||0)>BI.at))){ const r=L[L.length-1]; const ex=(EXAMS[pid]||[]).find(x=>x.id===r.exam)||{id:r.exam,subj:'dict'}; return {ex,n:r.mat.words.length}; }
+    if(BI) return {ex:{id:BI.id,subj:'dict'},n:BI.n};
     return {ex:{id:'dict-base-'+pid,subj:'dict'},n:null};
   }
   function dictOn(pid){ try{ const c=dictCur(pid); return isArch(c.ex)?null:c; }catch(e){ return null; } }
@@ -13678,7 +13689,7 @@ button:not(:disabled):active{filter:brightness(.93);}
   function chip(id){ const v=DATES[id]; return '<span class="gq-dt'+(v?' set':'')+'" role="button" tabindex="0" data-dt="'+id+'" aria-label="תאריך הבחינה">📅 '+(v?short(v):'תאריך')+'</span>'; }
   function exName(id){
     for(const k of KIDS){ const x=(EXAMS[k]||[]).find(e=>e.id===id); if(x){ const S=SUBJ[x.subj]||{n:''}; return {pid:k,t:S.n}; } }
-    const m=/^dict-base-(.+)$/.exec(id); if(m) return {pid:m[1],t:'הכתבה'};
+    const m=/^dict-base-(.+)$/.exec(id)||/^dict-(aviv|roni|hili|ziv)-\d+$/.exec(id); if(m) return {pid:m[1],t:'הכתבה'};
     return {pid:null,t:''};
   }
   function paint(){
