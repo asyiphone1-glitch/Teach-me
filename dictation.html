@@ -4436,6 +4436,10 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden && hr.want
 .fc-pick h2{margin:18px 0 18px;}
 .fc-pk{display:flex;align-items:center;gap:14px;width:100%;text-align:right;margin-bottom:14px;padding:18px 16px;border-radius:22px;background:#fff;border:3px solid var(--line);font-family:'Heebo',sans-serif;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .fc-pk:active{transform:scale(.98);}
+.fc-dirs{display:flex;gap:10px;margin:0 0 16px;}
+.fc-dir{flex:1;padding:14px 8px;border-radius:18px;background:#fff;border:3px solid var(--line);font-family:'Heebo',sans-serif;font-size:18px;font-weight:800;line-height:1.25;color:var(--ink-soft);cursor:pointer;}
+.fc-dir.on{border-color:#6C63D9;background:#EEECFC;color:#3B33A6;box-shadow:0 4px 0 #C9C5F2;}
+.fc-dir:active{transform:scale(.97);}
 .fc-pk .i{font-size:44px;line-height:1;}
 .fc-pk b{display:block;font-size:21px;font-weight:800;}
 .fc-pk small{display:block;font-size:15px;color:var(--ink-soft);font-weight:600;margin-top:2px;}
@@ -4719,14 +4723,16 @@ function fcStartMode(mode, dir){
 }
 function fcChoose(){
   if (FC.timer){ clearTimeout(FC.timer); FC.timer=null; }
-  FC_DIR='he';
+  if (FC_DIR!=='en') FC_DIR='he';
   showScreen('screen-flash');
   document.documentElement.classList.remove('fc-lock');
   document.getElementById('fc-play').style.display='none';
   const end=document.getElementById('fc-end'); end.style.display='';
   document.getElementById('fc-count').textContent='🃏 כרטיסיות';
   const all=fcWords().length, wk=fcWeakList().length;
-  end.innerHTML='<div class="fc-sum fc-pick"><h2>מה לומדים עכשיו?</h2>'+
+  /* 11.11.2026: שתי אפשרויות — מעברית לאנגלית / מאנגלית לעברית */
+  const dirB=(d,t)=>'<button type="button" class="fc-dir'+(FC_DIR===d?' on':'')+'" onclick="FC_DIR=\''+d+'\';fcChoose()">'+t+'</button>';
+  end.innerHTML='<div class="fc-sum fc-pick"><div class="fc-dirs">'+dirB('he','מעברית<br>לאנגלית')+dirB('en','מאנגלית<br>לעברית')+'</div><h2>מה לומדים עכשיו?</h2>'+
     '<button type="button" class="fc-pk weak" '+(wk?'':'disabled ')+'onclick="fcStartMode(\'weak\')"><span class="i">🎯</span><span><b>רק מה שעוד לא יודעת</b><small>'+(wk?'מילים שלא ידעת או שטעית בהן · '+wk:'אין! את יודעת הכול 🌟')+'</small></span></button>'+
     '<button type="button" class="fc-pk all" onclick="fcStartMode(\'all\')"><span class="i">🔁</span><span><b>כל המילים</b><small>חוזרים על הכול, גם מה שכבר יודעת · '+all+'</small></span></button>'+
     '</div>';
