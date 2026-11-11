@@ -12675,7 +12675,7 @@ window.TM_DICT_BUILTIN={
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611110100';
+  const TM_BUILD='202611112030';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -15044,13 +15044,18 @@ function __fcPatch611(){
     ensure();
     var i=FC.i, w=FC.list[i], rep=!!FC.rp[i], n=FC.n, len=FC.list.length, r;
     FC.pv=w?{lv:w.lv,due:w.due}:null;
+    var slow=!!(knows&&w&&FC.shownAt&&Date.now()-FC.shownAt>SLOW_MS);
+    if(slow) knows=false;   /* 🐢 לקח יותר מ-6 שניות — נחשב "עוד לא שולטת" */
+    if(w){ FC.sh=FC.sh||[]; FC.sh.push({en:w.en,was:slowGet().indexOf(w.en)>=0,st:FC.st[w.en]}); if(FC.sh.length>60) FC.sh.shift(); }
     FC.n=rep?i:i+1;
-    try{ r=_A.apply(this,arguments); } finally{ FC.n=n; }
+    try{ r=_A.call(this,knows); } finally{ FC.n=n; }
     if(!w) return r;
     if(FC.list.length>len) FC.list.length=len;   /* במקום לחזור רק בסוף הסבב */
     if(!knows) addRep(w);
-    if(!rep) FC.st[w.en]=knows?'k':'u';
-    if(knows) msg((rep?'✓ יופי! זכרת הפעם 💪':'✓ יופי! ידעת')+'<button type="button" class="fc-fix" onclick="fcOops()">↩ טעיתי, לא ידעתי</button>');
+    if(!rep) FC.st[w.en]=slow?'s':(knows?'k':'u');
+    if(slow) slowMark(w.en,true); else if(!rep) slowMark(w.en,false);
+    if(slow) msg('<span class="fc-slowmsg">🐢 ידעת, אבל לקח זמן — עוד נחזור עליה 🙂</span>');
+    else if(knows) msg((rep?'✓ יופי! זכרת הפעם 💪':'✓ יופי! ידעת')+'<button type="button" class="fc-fix" onclick="fcOops()">↩ טעיתי, לא ידעתי</button>');
     else msg('<button type="button" class="fc-fix k" onclick="fcActually()">✓ דווקא ידעתי</button>');
     stats(); return r;
   };
@@ -15062,7 +15067,7 @@ function __fcPatch611(){
     var w=FC.list[FC.i], rep=!!FC.rp[FC.i]; if(!w) return;
     if(!rep){
       var j=FC.known.indexOf(w); if(j>=0) FC.known.splice(j,1);
-      FC.unknown.push(w); FC.st[w.en]='u';
+      FC.unknown.push(w); FC.st[w.en]='u'; slowMark(w.en,false);
       if(dad()) dadSet(w,0);
       else { var k=fcKnown(), x=k.indexOf(w.en); if(x>=0){ k.splice(x,1); fcSaveKnown(k); } try{ trackMistake(false,w); }catch(e){} }
     }
@@ -15083,7 +15088,7 @@ function __fcPatch611(){
     dropRep(w);
     if(!rep){
       var u=FC.unknown.indexOf(w); if(u>=0) FC.unknown.splice(u,1);
-      FC.known.push(w); FC.st[w.en]='k';
+      FC.known.push(w); FC.st[w.en]='k'; slowMark(w.en,false);
       if(dad()) dadSet(w,((FC.pv&&FC.pv.lv)||0)+1);
       else { var k=fcKnown(); if(k.indexOf(w.en)<0){ k.push(w.en); fcSaveKnown(k); } try{ trackMistake(true,w); }catch(e){} }
     }
@@ -15096,10 +15101,34 @@ function __fcPatch611(){
     FC.timer=setTimeout(fcNext,900);
   };
 
+  /* ↩ הקודם: מחזירים גם את סימון 🐢 */
+  if(typeof window.fcUndo==='function'){
+    var _U=window.fcUndo;
+    window.fcUndo=function(){
+      var h=FC.sh&&FC.sh.pop();
+      if(h){ slowMark(h.en,h.was); if(FC.st){ if(h.st==null) delete FC.st[h.en]; else FC.st[h.en]=h.st; } }
+      return _U.apply(this,arguments);
+    };
+  }
   /* במסך הסיום: לחיצה על מילה ברשימת "יודעת" = לא ידעתי */
   var _E=fcEnd;
   fcEnd=function(){
     var r=_E.apply(this,arguments);
+    try{   /* 🐢 שלוש רשימות: עוד לא יודעת · עוד לא שולטת · יודעת */
+      var ub=document.querySelector('#fc-end .fc-box.u'), sa=slowGet();
+      if(ub&&!document.querySelector('#fc-end .fc-box.s')){
+        var rowsU=[].slice.call(ub.querySelectorAll('.fc-w')), mv=rowsU.filter(function(rw){ return sa.indexOf((rw.querySelector('.en')||{}).textContent)>=0; });
+        if(mv.length){
+          var M=dad(), sb=document.createElement('div'); sb.className='fc-box s';
+          sb.innerHTML='<h3>🐢 עוד לא '+(M?'שולט':'שולטת')+' ('+mv.length+') <span class="fc-hint">· '+'ידעת'+', אבל לקח זמן</span></h3>';
+          mv.forEach(function(rw){ sb.appendChild(rw); });
+          ub.after(sb);
+          var left=rowsU.length-mv.length, h=ub.querySelector('h3');
+          if(h) h.textContent='📚 עוד לא '+(M?'יודע':'יודעת')+' ('+left+')';
+          if(!left&&!ub.querySelector('.fc-none')) ub.insertAdjacentHTML('beforeend','<div class="fc-none">אין! כל הכבוד 🌟</div>');
+        }
+      }
+    }catch(e){}
     try{
       var box=document.querySelector('#fc-end .fc-box.k'); if(!box) return r;
       var rows=box.querySelectorAll('.fc-w'), h=box.querySelector('h3');
@@ -15109,7 +15138,7 @@ function __fcPatch611(){
         if(dad()) dadSet(w,0);
         else { var k=fcKnown(), x=k.indexOf(en); if(x>=0){ k.splice(x,1); fcSaveKnown(k); } try{ trackMistake(false,w); }catch(e){} }
         var j=FC.known.indexOf(w); if(j>=0){ FC.known.splice(j,1); FC.unknown.push(w); }
-        if(FC.st) FC.st[en]='u';
+        if(FC.st) FC.st[en]='u'; slowMark(en,false);
         fcEnd(false);
       }; });
     }catch(e){}
