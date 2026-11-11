@@ -1,8 +1,8 @@
 /* teach-me — פתיחה מיידית (10.11.2026).
    הקבצים של האפליקציה נפתחים מיד מהזיכרון של הטלפון, ובמקביל הגרסה החדשה יורדת ברקע.
    בפתיחה הבאה כבר רואים אותה. בפעם הראשונה (או אם אין שום דבר בזיכרון) — מהרשת. */
-const C='tm-v3';
-const CORE=['./','index.html','firebase-bridge.js','manifest.webmanifest','icon-192.png','dictation.html','t3d.js'];
+const C='tm-v4';
+const CORE=['./','index.html','firebase-bridge.js','manifest.webmanifest','icon-192.png','dictation.html','t3d.js','lib/three-r128.min.js'];
 self.addEventListener('install',e=>{ self.skipWaiting(); e.waitUntil(caches.open(C).then(c=>c.addAll(CORE).catch(()=>{}))); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
 self.addEventListener('fetch',e=>{

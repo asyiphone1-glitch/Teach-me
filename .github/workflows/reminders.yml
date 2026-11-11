@@ -22,4 +22,5 @@ jobs:
       - run: node scripts/remind.mjs
         env:
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
           MODE: ${{ github.event.inputs.mode }}

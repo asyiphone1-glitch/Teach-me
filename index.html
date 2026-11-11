@@ -8840,9 +8840,9 @@ window.TM_LOOK={
   /* ---------- טקס כקובץ MP3 (קול רובוטי מובנה + מוזיקה ואפקטים) ---------- */
   let ESPK=null, LAME=null;
   function loadLame(){ if(LAME) return LAME; LAME=new Promise((ok,no)=>{ if(window.lamejs) return ok(window.lamejs);
-    const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js';
+    const sc=document.createElement('script'); sc.src='lib/lame-1.2.1.min.js';
     sc.onload=()=>window.lamejs?ok(window.lamejs):no(new Error('lame')); sc.onerror=()=>no(new Error('lame')); document.head.appendChild(sc); }); LAME.catch(()=>{ LAME=null; }); return LAME; }
-  function loadEspeak(){ if(ESPK) return ESPK; ESPK=import('https://cdn.jsdelivr.net/npm/espeak-ng@1.0.2/dist/espeak-ng.js').then(m=>m.default||m); ESPK.catch(()=>{ ESPK=null; }); return ESPK; }
+  function loadEspeak(){ if(ESPK) return ESPK; ESPK=import('./lib/espeak/espeak-ng.js').then(m=>m.default||m); ESPK.catch(()=>{ ESPK=null; }); return ESPK; }
   function robotText(t){ t=typeof lsSpeakable==='function'?lsSpeakable(t):t;
     return String(t).replace(/[^֐-׿A-Za-z0-9 .,!?\-'"״׳]/g,' ').replace(/\.{2,}/g,', ').replace(/\s+/g,' ').trim(); }
   async function robotSay(text,pitch){

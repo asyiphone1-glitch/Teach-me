@@ -8,7 +8,7 @@
    ================================================================ */
 (function(){
   if(window.TM3D) return;
-  const LIB='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  const LIB='lib/three-r128.min.js';
   let LOADP=null;
   function loadThree(){
     if(window.THREE&&window.THREE.WebGLRenderer) return Promise.resolve(window.THREE);

@@ -1,0 +1,23 @@
+# teach-me — פרסום ל-Firebase Hosting (11.11.2026, אבטחה)
+# רץ אחרי כל דחיפה ל-main. עובד רק אחרי שמוסיפים את FIREBASE_SA ב-Secrets.
+# אחרי שהכתובת החדשה נבדקה — אפשר להפוך את המאגר לפרטי.
+name: deploy-firebase
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check secret
+        id: s
+        run: echo "ok=${{ secrets.FIREBASE_SA != '' }}" >> $GITHUB_OUTPUT
+      - if: steps.s.outputs.ok == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SA }}
+          projectId: teach-me-cd228
+          channelId: live

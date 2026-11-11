@@ -15,9 +15,21 @@ webpush.setVapidDetails(APP,VAPID_PUB,VAPID_PRIV);
 
 const BASE='https://firestore.googleapis.com/v1/projects/'+PROJECT+'/databases/(default)/documents/';
 let TOKEN=null;
+/* 11.11.2026 (אבטחה): אם יש מפתח שירות ב-Secrets (FIREBASE_SA) — נכנסים איתו.
+   אחרת — כמו קודם, כניסה אנונימית. */
+import crypto from 'node:crypto';
+async function signInSA(sa){
+  const now=Math.floor(Date.now()/1000);
+  const b=o=>Buffer.from(JSON.stringify(o)).toString('base64url');
+  const head=b({alg:'RS256',typ:'JWT'}), body=b({iss:sa.client_email,scope:'https://www.googleapis.com/auth/datastore',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+3600});
+  const sig=crypto.createSign('RSA-SHA256').update(head+'.'+body).sign(sa.private_key,'base64url');
+  const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion='+head+'.'+body+'.'+sig});
+  const j=await r.json(); if(!j.access_token) throw new Error('SA signIn failed'); TOKEN=j.access_token;
+}
 async function signIn(){
+  if(process.env.FIREBASE_SA){ try{ await signInSA(JSON.parse(process.env.FIREBASE_SA)); console.log('auth: service account'); return; }catch(e){ console.log('SA failed, falling back:',e.message); } }
   const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+API_KEY,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
-  const j=await r.json(); if(!j.idToken) throw new Error('signIn: '+JSON.stringify(j)); TOKEN=j.idToken;
+  const j=await r.json(); if(!j.idToken) throw new Error('signIn failed'); TOKEN=j.idToken; console.log('auth: anonymous');
 }
 const H=()=>({authorization:'Bearer '+TOKEN});
 const val=d=>{ try{ return JSON.parse(d.fields.j.stringValue); }catch(e){ return null; } };
@@ -25,7 +37,7 @@ async function getDoc(path){ const r=await fetch(BASE+path,{headers:H()}); if(r.
 async function listCol(path){
   const out=[]; let page='';
   do{ const r=await fetch(BASE+path+'?pageSize=300'+(page?'&pageToken='+page:''),{headers:H()}); const j=await r.json();
-    (j.documents||[]).forEach(d=>out.push({name:d.name.split('/documents/')[1],v:val(d)})); page=j.nextPageToken||''; }while(page);
+    (j.documents||[]).forEach(d=>out.push({name:d.name.split('/documents/')[1],v:val(d),t:+((d.fields&&d.fields.t&&(d.fields.t.integerValue||d.fields.t.doubleValue))||0),upd:Date.parse(d.updateTime||'')||0})); page=j.nextPageToken||''; }while(page);
   return out;
 }
 
@@ -70,3 +82,14 @@ for(const s of subs){
   }
 }
 console.log('sent',sent,'removed',gone);
+
+/* 🧹 11.11.2026 (אבטחה, אושר): פעם ביום בבוקר — מוחקים מהענן צילומי מחברות, נוכחות ומכשירים
+   שלא התעדכנו 30 יום. (תאריכי בחינות, תשובות ופודיום לא נמחקים.) */
+if(mode==='morning'){
+  const OLD=Date.now()-30*864e5; let del=0;
+  for(const col of ['upimgs','presence','devices']){
+    let L=[]; try{ L=await listCol(col); }catch(e){ console.log('list',col,'failed'); continue; }
+    for(const d of L){ const at=d.t||d.upd; if(at&&at<OLD){ const r=await fetch(BASE+d.name,{method:'DELETE',headers:H()}).catch(()=>null); if(r&&r.ok) del++; } }
+  }
+  console.log('cleanup deleted',del);
+}
