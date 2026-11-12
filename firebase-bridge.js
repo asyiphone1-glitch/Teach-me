@@ -29,13 +29,23 @@
         onSnapshot:function(cb,err){ return r.onSnapshot(function(s){ cb(snapDoc(s)); }, err||function(){}); }
       };
     }
+    /* 12.11.2026 (חיסכון במכסה): שאילתה לפי שם המסמך — since('2026-10-13') = מהיום הזה והלאה, before(...) = לפניו.
+       get({source:'cache'}) קורא מהזיכרון של הטלפון בלי לגעת בענן. */
+    function query(q){
+      return {
+        get:function(o){ return (o?q.get(o):q.get()).then(snapCol); },
+        onSnapshot:function(cb,err){ return q.onSnapshot(function(s){ cb(snapCol(s)); }, err||function(){}); }
+      };
+    }
     function collection(path){
-      var c=fs.collection(path);
+      var c=fs.collection(path), ID=function(){ return firebase.firestore.FieldPath.documentId(); };
       return {
         path:path,
         doc:function(id){ return doc(path+'/'+id); },
-        get:function(){ return c.get().then(snapCol); },
-        onSnapshot:function(cb,err){ return c.onSnapshot(function(s){ cb(snapCol(s)); }, err||function(){}); }
+        get:function(o){ return (o?c.get(o):c.get()).then(snapCol); },
+        onSnapshot:function(cb,err){ return c.onSnapshot(function(s){ cb(snapCol(s)); }, err||function(){}); },
+        since:function(id){ return query(c.where(ID(),'>=',id)); },
+        before:function(id){ return query(c.where(ID(),'<',id)); }
       };
     }
     return { doc:doc, collection:collection };

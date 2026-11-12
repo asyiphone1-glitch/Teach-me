@@ -7416,19 +7416,17 @@ setInterval(_syNow,15000);
 /* עדכון חי אצל ההורה */
 let _syLiveOn=false; const _syPend=new Set(); let _syT=null;
 function syLive(){
+  /* 12.11.2026 (חיסכון במכסה): בלי מאזין שני על אותו אוסף — מקשיבים לעדכון של המאזין היחיד (tm-live) */
   if(_syLiveOn||!DB) return; _syLiveOn=true;
-  const myDev=devId();
-  Object.keys(PROFILES).forEach(pid=>{
-    let first=true;
-    try{ DB.collection('stats/'+pid+'/days').onSnapshot(snap=>{
-      if(first){ first=false; return; }
-      let ext=false; try{ snap.docChanges().forEach(c=>{ const b=(c.doc&&c.doc.data&&c.doc.data())||{}; if(b.dev!==myDev) ext=true; }); }catch(e){ ext=true; }
-      if(!ext) return; _syPend.add(pid); clearTimeout(_syT); _syT=setTimeout(syApply,1500);
-    },()=>{}); }catch(e){}
+  window.addEventListener('tm-live',ev=>{
+    const pid=ev&&ev.detail&&ev.detail.pid; if(!pid||!ev.detail.cloud) return;
+    _syPend.add(pid); clearTimeout(_syT); _syT=setTimeout(syApply,1500);
   });
 }
 async function syApply(){
   const pids=[..._syPend]; _syPend.clear();
+  /* 12.11.2026 (חיסכון במכסה): קריאה מלאה מהענן רק כשאזור ההורים פתוח. אחרת המאזין כבר עדכן הכול */
+  const _ov=document.getElementById('parentOv'); if(!(_ov&&_ov.classList.contains('show'))){ try{ if(!PROFILE) renderGate(); }catch(e){} return; }
   for(const pid of pids){ try{ const A=await loadAll(pid); GSTATS[pid]=statsFor(pid,A.E); }catch(e){} }
   try{
     const ov=document.getElementById('parentOv'), open=ov&&ov.classList.contains('show');
@@ -7876,12 +7874,29 @@ window.TM_LOOK={
   function listen(){
     if(!DB||listen.on) return; listen.on=true;
     ORDER.forEach(pid=>{
-      try{ DB.collection('stats/'+pid+'/days').onSnapshot(snap=>{
-        const L=[]; snap.docs.forEach(d=>{ const b=(d.data&&d.data())||{}; (b.log||[]).forEach(e=>L.push(e)); });
-        CLOUD_E[pid]=L; live=true; lastUp=Date.now(); draw();
-        try{ window.dispatchEvent(new Event('tm-live')); }catch(e){}
+      /* 12.11.2026 (חיסכון במכסה, אושר): מאזין חי רק ל-30 הימים האחרונים.
+         ימים ישנים יותר נקראים מהזיכרון של הטלפון, ומהענן רק פעם בחודש (או בפעם הראשונה במכשיר). */
+      const col=DB.collection('stats/'+pid+'/days');
+      const cut=dayKey(Date.now()-30*864e5), mon=cut.slice(0,7), okKey='tm_oldDays_'+pid;
+      let OLD=[], REC=[], first=true;
+      const logs=snap=>{ const L=[]; snap.docs.forEach(d=>{ const b=(d.data&&d.data())||{}; (b.log||[]).forEach(e=>L.push(e)); }); return L; };
+      const put=()=>{
+        CLOUD_E[pid]=OLD.concat(REC); live=true; lastUp=Date.now(); draw();
+        try{ window.dispatchEvent(new CustomEvent('tm-live',{detail:{pid,cloud:!first}})); }catch(e){}
         try{ GSTATS[pid]=statsFor(pid,allE(pid)); if(!gate.classList.contains('hide')) renderGate(); }catch(e){}
-      },()=>{}); }catch(e){}
+      };
+      if(!col.since){   /* קובץ חיבור ישן בזיכרון — כמו קודם */
+        try{ col.onSnapshot(snap=>{ REC=logs(snap); put(); first=false; },()=>{}); }catch(e){}
+        return;
+      }
+      (async()=>{
+        const q=col.before(cut); let sn=null;
+        let ok=null; try{ ok=localStorage.getItem(okKey); }catch(e){}
+        if(ok===mon){ try{ sn=await q.get({source:'cache'}); }catch(e){} }
+        if(!sn){ try{ sn=await q.get(); try{ localStorage.setItem(okKey,mon); }catch(e){} }catch(e){} }
+        if(sn){ OLD=logs(sn); put(); }
+      })();
+      try{ col.since(cut).onSnapshot(snap=>{ REC=logs(snap); put(); first=false; },()=>{}); }catch(e){}
     });
   }
   build(); draw(); window.tmPdDraw=draw;
@@ -10429,8 +10444,18 @@ const AV_WEEKS=[
     await flush();
     const dev=devId(), M={}, o=loc()[pid]||{};
     Object.keys(o).forEach(d=>{ M[d]=(M[d]||0)+o[d]; });
-    if(DB){ try{ const snap=await DB.collection('stats/'+pid+'/app').get();
-      snap.docs.forEach(x=>{ const b=x.data()||{}; if(b.dev===dev||!b.day) return; M[b.day]=(M[b.day]||0)+(b.ms||0); }); }catch(e){} }
+    if(DB){ try{
+      /* 12.11.2026 (חיסכון במכסה, אושר): כל דקה קוראים מהענן רק 30 ימים אחרונים.
+         הסכומים של הימים הישנים נשמרים בטלפון ומתעדכנים מהענן פעם בחודש. */
+      const col=DB.collection('stats/'+pid+'/app'), add=(snap,T)=>snap.docs.forEach(x=>{ const b=x.data()||{}; if(b.dev===dev||!b.day) return; T[b.day]=(T[b.day]||0)+(b.ms||0); });
+      if(col.since){
+        const cut=dayKey(Date.now()-30*864e5), mon=cut.slice(0,7), K='tm_oldApp_'+pid;
+        let O=null; try{ O=JSON.parse(localStorage.getItem(K)||'null'); }catch(e){}
+        if(!O||O.m!==mon||!O.c){ const T={}; add(await col.before(cut).get(),T); O={m:mon,c:cut,d:T}; try{ localStorage.setItem(K,JSON.stringify(O)); }catch(e){} }
+        Object.keys(O.d||{}).forEach(d=>{ if(d<O.c) M[d]=(M[d]||0)+O.d[d]; });
+        add(await col.since(O.c).get(),M);
+      } else add(await col.get(),M);
+    }catch(e){} }
     APPC[pid]=M; return M;
   }
   function sumFor(M,period){
@@ -12675,7 +12700,7 @@ window.TM_DICT_BUILTIN={
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611120815';
+  const TM_BUILD='202611121600';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -15551,6 +15576,7 @@ function __dadDelPatch(){
     return out;
   }
   window.TM_TRICK_HAS=exId=>tricksFor(exId).length>0;
+  window.TM_TRICKS_FOR=exId=>{ try{ return tricksFor(exId); }catch(e){ return []; } };
   window.TM_TRICK_BTN=exId=>tricksFor(exId).length?'<button type="button" class="mm-btn" data-trick="'+E(exId)+'"><span class="mm-ic">🧠</span><span><b>טריק לזכור</b><small>ראשי תיבות וסיפור</small></span></button>':'';
   function openTricks(exId){
     const L=tricksFor(exId); if(!L.length) return;
@@ -15614,7 +15640,7 @@ function __dadDelPatch(){
 
   /* ---------- 14 · 🔔 תזכורות לבחינות גם כשהאפליקציה סגורה ----------
      Web Push רגיל (חינם). שרת: GitHub Actions (.github/workflows/reminders.yml) — כל בוקר ב-07:30 ובערב ב-17:00. */
-  const VAPID='BDNFkqbqJJVyrZhkyDFzoOGlOTDOo3f1fVQNhorq_d7wQkUpUzdMz_If7stfDjGYUDnQHNfnRofK_EW6bq4wWXg';
+  const VAPID='BAir7yGUBVlVC1zIl4vAuEKWfqRUzGUB85vECJYelmTey4F-zq8DifRc7Py_KSpz6fnOfD5MJfAG4bTe3u99pGU';
   const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
   const iosNotInstalled=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches);
   const b64=s=>{ const p='='.repeat((4-s.length%4)%4), b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')); const a=new Uint8Array(b.length); for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; };
@@ -15625,11 +15651,25 @@ function __dadDelPatch(){
     if(Notification.permission!=='granted'){ if(!ask) return 'ask'; const p=await Notification.requestPermission(); if(p!=='granted') return p; }
     const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
+    /* 12.11.2026: מפתח חדש — מנוי ישן עם המפתח הקודם מוחלף לבד */
+    if(sub&&lg('tm_push_k')!==VAPID){ try{ await sub.unsubscribe(); }catch(e){} sub=null; }
     if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(VAPID)});
     const j=sub.toJSON(), id=(who+'-'+(j.keys&&j.keys.auth||'x')).replace(/[^\w-]/g,'').slice(0,60);
     const D=db(); if(!D) return 'nodb';
-    try{ await D.doc('push/'+id).set({who,sub:j,at:Date.now(),ua:navigator.userAgent.slice(0,80)}); ls(subKey(who),id); return 'ok'; }catch(e){ return 'err'; }
+    try{
+      const oldId=lg(subKey(who)); if(oldId&&oldId!==id){ try{ await D.doc('push/'+oldId).delete(); }catch(e){} }
+      await D.doc('push/'+id).set({who,sub:j,at:Date.now(),ua:navigator.userAgent.slice(0,80)}); ls(subKey(who),id); ls('tm_push_k',VAPID); return 'ok';
+    }catch(e){ return 'err'; }
   }
+  /* 12.11.2026: מי שכבר הפעילה תזכורות — עוברת למפתח החדש בלי ללחוץ שוב */
+  async function pushRenew(){
+    if(!pushOK()||Notification.permission!=='granted'||lg('tm_push_k')===VAPID) return;
+    const L=KIDS.concat(['parent']).filter(w=>lg(subKey(w)));
+    if(!L.length) return;
+    if(!db()){ setTimeout(pushRenew,5000); return; }
+    for(const w of L){ try{ await subscribe(w,false); }catch(e){} }
+  }
+  setTimeout(pushRenew,6000);
   function pushBtn(){
     const P=prof(), hb=$('hubBox'); if(!P||!hb||!KIDS.includes(P.id)) return;
     let b=$('tmPushBtn');
@@ -15670,4 +15710,106 @@ function __dadDelPatch(){
 })();
 </script>
 
+
+<style>
+/* 12.11.2026 — מפת זיכרון וחוברת סיכום לבחינות שהועלו */
+#upMmOv{position:fixed;inset:0;z-index:9000;background:var(--paper,#FBF7F0);overflow:auto;display:none;padding:12px 12px 40px;}
+#upMmOv.show{display:block;}
+#upMmOv .um-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+#upMmOv .um-top h2{flex:1;margin:0;font-size:1.15rem;}
+#upMmOv .um-x{width:44px;height:44px;border-radius:12px;border:2px solid var(--acc,#6E8C6A);background:#fff;font-size:1.2rem;cursor:pointer;}
+.um-core{margin:0 auto 14px;max-width:520px;text-align:center;background:var(--acc,#6E8C6A);color:#fff;border-radius:999px;padding:14px 18px;font-weight:800;font-size:1.1rem;box-shadow:0 3px 0 rgba(0,0,0,.15);}
+.um-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-width:760px;margin:0 auto;}
+.um-c{border-radius:16px;padding:10px 12px;border:3px solid var(--c);background:#fff;}
+.um-c h3{margin:0 0 6px;font-size:1rem;color:var(--c);display:flex;gap:6px;align-items:flex-start;}
+.um-c h3 i{font-style:normal;background:var(--c);color:#fff;border-radius:50%;min-width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;}
+.um-c ul{margin:0;padding-inline-start:16px;font-size:.88rem;line-height:1.45;}
+.um-c .tp{margin-top:6px;font-size:.85rem;background:#FFF6D6;border-radius:10px;padding:5px 8px;}
+.um-tk{max-width:760px;margin:12px auto 0;background:#fff;border:2px dashed var(--acc,#6E8C6A);border-radius:16px;padding:10px 12px;font-size:.9rem;}
+.um-tk b.w{font-size:1.2rem;letter-spacing:.05em;}
+#upPrint{display:none;}
+@media print{
+  body.up-printing > *:not(#upPrint){display:none !important;}
+  body.up-printing #upPrint{display:block !important;}
+  #upPrint{font-family:'Heebo',Arial,sans-serif;color:#111;direction:rtl;font-size:12pt;line-height:1.5;}
+  #upPrint h1{font-size:20pt;margin:0 0 4pt;} #upPrint h2{font-size:15pt;margin:14pt 0 6pt;border-bottom:2px solid #999;padding-bottom:2pt;}
+  #upPrint h3{font-size:13pt;margin:10pt 0 3pt;} #upPrint .pb{page-break-before:always;}
+  #upPrint .tip{background:#FFF3C4;border-radius:6pt;padding:4pt 8pt;margin:4pt 0;}
+  #upPrint .we{border:1px solid #bbb;border-radius:6pt;padding:4pt 8pt;margin:4pt 0;}
+  #upPrint .q{margin:5pt 0;} #upPrint .ans{font-size:11pt;}
+  #upPrint .sh{display:grid;grid-template-columns:1fr 1fr;gap:6pt;} #upPrint .sh div{border:1px solid #ccc;border-radius:6pt;padding:4pt 8pt;break-inside:avoid;}
+}
+</style>
+<script>
+/* ===== 12.11.2026 — אושר ע״י ההורה: 🗺️ מפת זיכרון ו-🖨️ חוברת סיכום לכל בחינה שהועלתה בצ׳אט =====
+   נבנות לבד מהחומר של הבחינה (נושאים, הסברים, טריקים, דוגמאות ושאלות) — גם לבחינות חדשות שיעלו בהמשך. */
+(function(){
+  const $=id=>document.getElementById(id);
+  const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const COLS=['#0F7C77','#C42B66','#B4540C','#2A63CC','#6B4FB8','#3E8E2F','#A3262F','#8A6D00'];
+  function data(exId){
+    const pid=(typeof PROFILE!=='undefined'&&PROFILE)?PROFILE.id:null; if(!pid||!window.TM_UP||!TM_UP.ready) return null;
+    const B=TM_UP.ready(pid,exId); if(!B.length) return null;
+    const ex=(typeof EXAMS!=='undefined'&&(EXAMS[pid]||[]).find(x=>x.id===exId))||{};
+    const T=[]; B.forEach(r=>(r.mat.topics||[]).forEach(t=>T.push(t)));
+    const title=B.length===1?B[0].mat.title:(ex.title||B[0].mat.title||'הבחינה שלי');
+    const tricks=window.TM_TRICKS_FOR?TM_TRICKS_FOR(exId):[];
+    return {pid,ex,T,title,tricks,name:(PROFILE&&PROFILE.name)||''};
+  }
+  /* 2–3 שורות קצרות מתוך ההסבר */
+  function keys(t,n){
+    const L=String(t.ex||'').replace(/([.!?])\s+/g,'$1\n').split(/\n+/).map(x=>x.trim().replace(/^[-•·*]\s*/,'')).filter(x=>x.length>2);
+    return L.slice(0,n||3).map(x=>x.length>90?x.slice(0,88)+'…':x);
+  }
+  function trickHtml(x){
+    return x.k==='acr'?'<div><b>🔤 '+E(x.t)+':</b> <b class="w">'+E(x.w)+'</b> — '+x.L.map(l=>'<b>'+E(l[0])+'</b> '+E(l[1])).join(' · ')+'</div>'
+      :'<div><b>📖 '+E(x.t)+':</b> '+E(x.s).replace(/\n/g,'<br>')+'</div>';
+  }
+  /* ---------- 🗺️ מפת זיכרון ---------- */
+  function openMap(exId){
+    const D=data(exId); if(!D) return;
+    let o=$('upMmOv'); if(!o){ o=document.createElement('div'); o.id='upMmOv'; o.setAttribute('role','dialog'); o.setAttribute('aria-label','מפת זיכרון'); document.body.appendChild(o); }
+    o.innerHTML='<div class="um-top"><button type="button" class="um-x" id="umX" aria-label="סגירה">✕</button><h2>🗺️ מפת זיכרון</h2></div>'+
+      '<div class="um-core">'+E(D.title)+'</div><div class="um-grid">'+
+      D.T.map((t,i)=>'<div class="um-c" style="--c:'+COLS[i%COLS.length]+'"><h3><i>'+(i+1)+'</i><span>'+E(t.t)+'</span></h3><ul>'+keys(t,3).map(k=>'<li>'+E(k)+'</li>').join('')+'</ul>'+(t.tip?'<div class="tp">🧠 '+E(t.tip)+'</div>':'')+'</div>').join('')+
+      '</div>'+(D.tricks.length?'<div class="um-tk"><b>🧠 טריקים לזכור</b>'+D.tricks.map(trickHtml).join('')+'</div>':'');
+    $('umX').onclick=()=>o.classList.remove('show');
+    o.classList.add('show'); o.scrollTop=0;
+    try{ localStorage.setItem('tm_mm_seen_'+D.pid+'_'+exId,String(Date.now())); }catch(e){}
+  }
+  /* ---------- 🖨️ חוברת סיכום ---------- */
+  function shuf(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function printBook(exId){
+    const D=data(exId); if(!D) return;
+    const Q=[]; D.T.forEach(t=>{ (t.q||[]).forEach(q=>{ if(q&&q.q&&Array.isArray(q.o)) Q.push({q:q.q,o:q.o,a:q.o[q.a]}); }); (t.tf||[]).forEach(f=>{ if(f&&f.s) Q.push({q:'נכון או לא נכון? '+f.s,o:null,a:f.ok?'נכון':'לא נכון'}); }); });
+    const QQ=shuf(Q).slice(0,15);
+    let el=$('upPrint'); if(!el){ el=document.createElement('div'); el.id='upPrint'; document.body.appendChild(el); }
+    el.innerHTML='<h1>📘 '+E(D.title)+'</h1><div>חוברת סיכום · '+E(D.name)+'</div>'+
+      '<h2>📖 כל החומר</h2>'+D.T.map((t,i)=>'<h3>'+(i+1)+'. '+E(t.t)+'</h3><div>'+E(t.ex).replace(/\n/g,'<br>')+'</div>'+(t.tip?'<div class="tip">🧠 '+E(t.tip)+'</div>':'')+
+        (Array.isArray(t.we)?t.we.filter(w=>w&&w.q).map(w=>'<div class="we"><b>דוגמה פתורה:</b> '+E(w.q)+(w.s&&w.s.length?'<ol>'+w.s.map(z=>'<li>'+E(z)+'</li>').join('')+'</ol>':'')+(w.a?'<div>התשובה: <b>'+E(w.a)+'</b></div>':'')+'</div>').join(''):'')).join('')+
+      '<h2 class="pb">⚡ דף שינון</h2><div class="sh">'+D.T.map((t,i)=>'<div><b>'+(i+1)+'. '+E(t.t)+'</b><ul>'+keys(t,2).map(k=>'<li>'+E(k)+'</li>').join('')+'</ul>'+(t.tip?'🧠 '+E(t.tip):'')+'</div>').join('')+'</div>'+
+      (D.tricks.length?'<h2>🧠 טריקים לזכור</h2>'+D.tricks.map(trickHtml).join(''):'')+
+      (QQ.length?'<h2 class="pb">✏️ שאלות לבדיקה</h2>'+QQ.map((q,i)=>'<div class="q"><b>'+(i+1)+'.</b> '+E(q.q)+(q.o?'<div>'+q.o.map((x,k)=>'('+'אבגד'[k]+') '+E(x)).join(' &nbsp; ')+'</div>':'')+'</div>').join('')+
+        '<h3>✅ תשובות</h3><div class="ans">'+QQ.map((q,i)=>(i+1)+'. '+E(q.a)).join(' · ')+'</div>':'');
+    document.body.classList.add('up-printing');
+    const done=()=>{ document.body.classList.remove('up-printing'); removeEventListener('afterprint',done); };
+    addEventListener('afterprint',done);
+    setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(done,60000); },150);
+  }
+  document.addEventListener('click',ev=>{
+    const m=ev.target.closest&&ev.target.closest('[data-upmm]'); if(m){ ev.preventDefault(); openMap(m.dataset.upmm); return; }
+    const p=ev.target.closest&&ev.target.closest('[data-upsk]'); if(p){ ev.preventDefault(); printBook(p.dataset.upsk); }
+  });
+  /* מסך החומר של בחינה שהועלתה: שני הכפתורים מתחת לכרטיס הראשון */
+  setInterval(()=>{
+    const box=$('txIn'); if(!box||!$('upAll')||box.querySelector('[data-upmm]')) return;
+    let ex=null; try{ ex=CUR_EXAM; }catch(e){} if(!ex||!data(ex.id)) return;
+    const card=$('upAll').closest('.tx-card'); if(!card) return;
+    card.insertAdjacentHTML('afterend','<div style="margin:0 0 12px">'+
+      '<button type="button" class="mm-btn" data-upmm="'+E(ex.id)+'"><span class="mm-ic">🗺️</span><span><b>מפת זיכרון</b><small>כל המבחן במסך אחד</small></span></button>'+
+      '<button type="button" class="mm-btn" data-upsk="'+E(ex.id)+'"><span class="mm-ic">🖨️</span><span><b>חוברת סיכום להדפסה</b><small>כל החומר · דף שינון · שאלות</small></span></button></div>');
+  },700);
+  window.TM_UPDOC={openMap,printBook};
+})();
+</script>
 </body></html>
