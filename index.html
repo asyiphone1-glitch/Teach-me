@@ -12675,7 +12675,7 @@ window.TM_DICT_BUILTIN={
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611120800';
+  const TM_BUILD='202611120815';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -15067,7 +15067,12 @@ function __fcPatch611(){
       if(!knows) addRep(w);
       if(!rep) FC.st[w.en]=slow?'s':(knows?'k':'u');
       if(slow) slowMark(w.en,true); else if(!rep) slowMark(w.en,false);
-      if(slow) msg('<span class="fc-slowmsg">🐢 ידעת, אבל לקח זמן — עוד נחזור עליה 🙂</span>');
+      if(slow){   /* 12.11.2026: 🐢 — עוברים לבד למילה הבאה, בלי ללחוץ */
+        msg('<span class="fc-slowmsg">🐢 ידעת, אבל לקח זמן — עוד נחזור עליה 🙂</span>');
+        var nb=document.getElementById('fc-next-btns'); if(nb) nb.style.display='none';
+        if(FC.timer) clearTimeout(FC.timer);
+        FC.timer=setTimeout(fcNext,3000);
+      }
       else if(knows) msg((rep?'✓ יופי! זכרת הפעם 💪':'✓ יופי! ידעת')+'<button type="button" class="fc-fix" onclick="fcOops()">↩ טעיתי, לא ידעתי</button>');
       else msg('<button type="button" class="fc-fix k" onclick="fcActually()">✓ דווקא ידעתי</button>');
       stats();

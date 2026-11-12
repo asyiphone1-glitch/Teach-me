@@ -1241,6 +1241,7 @@ html.vocab-only #doll-mini,html.vocab-only .doll-panel,html.vocab-only .ms-write
       <button type="button" class="fc-undo" id="fc-undo" onclick="fcUndo()" style="display:none" aria-label="חזרה לכרטיס הקודם">↩ הקודם</button>
     </div>
     <div id="fc-play">
+      <div class="fc-sayset" id="fc-sayset"><button type="button" id="fc-say-pre" onclick="fcSayToggle('pre')">🔊 לפני ההפיכה</button><button type="button" id="fc-say-post" onclick="fcSayToggle('post')">🔊 אחרי ההפיכה</button></div>
       <div class="fc-bar"><i id="fc-bar"></i></div>
       <div class="fc-scene">
         <div class="fc-card" id="fc-card">
@@ -4396,6 +4397,10 @@ document.addEventListener('visibilitychange',()=>{ if(document.hidden && hr.want
 #screen-flash .top-bar{gap:10px;}
 .fc-undo{margin-inline-start:auto;padding:7px 12px;border-radius:999px;border:2px solid #E1D6BF;background:#fff;color:#3A2E22;font-family:'Heebo',sans-serif;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;}
 .fc-undo:active{transform:scale(.95);}
+.fc-sayset{display:flex;justify-content:center;gap:8px;margin:2px 0 4px;}
+.fc-sayset button{font-family:'Heebo',sans-serif;font-size:14px;font-weight:800;padding:5px 12px;border-radius:999px;border:2px solid #E1D6BF;background:#fff;color:#9A8F7E;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.fc-sayset button.on{border-color:#2BA89A;background:#E6F7F4;color:#127A6E;}
+.fc-sayset button:active{transform:scale(.95);}
 .fc-bar{height:8px;background:#EFE7D6;border-radius:99px;overflow:hidden;margin:6px 0 16px;}
 .fc-bar i{display:block;height:100%;width:0;background:#F59E0B;transition:width .3s ease;}
 .fc-scene{perspective:1100px;}
@@ -4644,12 +4649,20 @@ function fcShow(){
     document.getElementById('fc-pic').textContent = w.icon || '📝';
     const tip=document.getElementById('fc-tip'); tip.classList.remove('show'); tip.textContent='';
     card.classList.remove('has-tip');
-    if (en) fcSay();
+    if (fcSayGet().pre) fcSayFront(w);
   }, FC.i ? 280 : 0);
+  fcSayPaint();
   FC.busy=false;
 }
 function fcUnshift(){ try{ const se=document.scrollingElement||document.documentElement; if(window.scrollX||se.scrollLeft){ window.scrollTo(0,window.scrollY); se.scrollLeft=0; document.body.scrollLeft=0; } }catch(e){} }
 function fcSay(){ const w=FC.list[FC.i]; if(w) try{ speak(w.en); }catch(e){} }
+/* 🔊 12.11.2026 (לבקשת ההורה): שני מתגים — להקריא לפני ההפיכה (כבוי) / אחרי ההפיכה (דלוק). נשמר לכל פרופיל */
+function fcSayKey(){ return 'fc-say-'+(activeProfile||'x'); }
+function fcSayGet(){ let o=null; try{ o=JSON.parse(localStorage.getItem(fcSayKey())||'null'); }catch(e){} return { pre: !!(o&&o.pre), post: !(o&&o.post===false) }; }
+function fcSayToggle(k){ const o=fcSayGet(); o[k]=!o[k]; try{ localStorage.setItem(fcSayKey(), JSON.stringify(o)); }catch(e){}
+  fcSayPaint(); if(o[k]){ const w=FC.list[FC.i]; if(w){ if(k==='pre'&&!FC.busy) fcSayFront(w); else if(k==='post'&&FC.busy) fcSay(); } } else { try{ speechSynthesis.cancel(); }catch(e){} } }
+function fcSayPaint(){ const o=fcSayGet(); [['pre','fc-say-pre'],['post','fc-say-post']].forEach(([k,id])=>{ const b=document.getElementById(id); if(b){ b.classList.toggle('on',o[k]); b.setAttribute('aria-pressed',o[k]?'true':'false'); b.textContent=(o[k]?'🔊':'🔇')+(k==='pre'?' לפני ההפיכה':' אחרי ההפיכה'); } }); }
+function fcSayFront(w){ try{ if(FC_DIR==='en') speak(w.en); else speakHe(w.he); }catch(e){} }
 function fcReport(ok,w){
   try{ if (window.parent && window.parent !== window) window.parent.postMessage({tm:'dictAns', ok:!!ok, en:w.en, he:w.he, g:'flash'}, '*'); }catch(e){}
 }
@@ -4659,7 +4672,7 @@ function fcAnswer(knows){
   const card=document.getElementById('fc-card'); card.style.transform=''; card.classList.add('flip');
   document.getElementById('fc-ask-btns').style.display='none';
   document.getElementById('fc-swipe').style.visibility='hidden';
-  fcSay();
+  if (fcSayGet().post) fcSay();
   fcReport(knows, w);
   const again = FC.i >= FC.n; /* מיכל 3.11: זו החזרה בסוף הסבב */
   if (knows){
