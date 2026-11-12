@@ -12675,7 +12675,7 @@ window.TM_DICT_BUILTIN={
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611112030';
+  const TM_BUILD='202611120800';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -15012,6 +15012,14 @@ function __fcPatch611(){
   document.head.appendChild(css);
 
   function ensure(){ if(!FC._p){ FC._p=1; FC.rp=FC.list.map(function(){ return false; }); FC.st={}; FC.rc={}; } }
+  /* 🐢 12.11.2026 — תיקון: הפונקציות האלה חסרו בעדכון של 11.11 ובגללן הכרטיסייה נתקעה בכל לחיצה */
+  var SLOW_MS=6000, hidAt=0;
+  function slowKey(){ var p='x'; try{ p=activeProfile||'x'; }catch(e){} return 'fc-slow-'+p; }
+  function slowGet(){ try{ var a=JSON.parse(localStorage.getItem(slowKey())||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+  function slowMark(en,on){ try{ var a=slowGet(), j=a.indexOf(en); if(on&&j<0) a.push(en); else if(!on&&j>=0) a.splice(j,1); else return; localStorage.setItem(slowKey(),JSON.stringify(a)); }catch(e){} }
+  /* יציאה מהאפליקציה באמצע לא נספרת בזמן */
+  document.addEventListener('visibilitychange',function(){ try{ if(document.hidden) hidAt=Date.now(); else if(hidAt){ if(FC.shownAt) FC.shownAt+=Date.now()-hidAt; hidAt=0; } }catch(e){} });
+  css.textContent+='#fc-stats .s{color:#B7791F}.fc-slowmsg{color:#B7791F;font-weight:800}.fc-box.s{border-color:#F3DDA8}.fc-box.s h3{color:#B7791F}';
   /* מילה שלא ידעת: חוזרת אחרי 3 כרטיסים (עד 3 פעמים בסבב) */
   function addRep(w){ FC.rc[w.en]=(FC.rc[w.en]||0)+1; if(FC.rc[w.en]>3) return; var p=Math.min(FC.i+4,FC.list.length); FC.list.splice(p,0,w); FC.rp.splice(p,0,true); }
   function dropRep(w){ for(var j=FC.i+1;j<FC.list.length;j++){ if(FC.list[j]===w&&FC.rp[j]){ FC.list.splice(j,1); FC.rp.splice(j,1); FC.rc[w.en]=Math.max(0,(FC.rc[w.en]||1)-1); return; } } }
@@ -15022,9 +15030,9 @@ function __fcPatch611(){
     var el=document.getElementById('fc-stats');
     if(!el){ el=document.createElement('div'); el.id='fc-stats'; var b=bar.parentNode; b.parentNode.insertBefore(el,b.nextSibling); }
     if(!FC._p){ el.innerHTML=''; return; }
-    var k=0,u=0; for(var e in FC.st){ if(FC.st[e]==='k') k++; else u++; }
+    var k=0,u=0,sl=0; for(var e in FC.st){ if(FC.st[e]==='k') k++; else if(FC.st[e]==='s') sl++; else u++; }
     var left=Math.max(0,FC.list.length-FC.i-(FC.busy?1:0));
-    el.innerHTML='<span class="k">✓ יודעת '+k+'</span><span class="u">✗ עוד לא '+u+'</span><span>🃏 נשארו '+left+'</span>';
+    el.innerHTML='<span class="k">✓ יודעת '+k+'</span><span class="u">✗ עוד לא '+u+'</span>'+(sl?'<span class="s">🐢 לא שולטת '+sl+'</span>':'')+'<span>🃏 נשארו '+left+'</span>';
   }
 
   var _S=fcShow;
@@ -15033,6 +15041,7 @@ function __fcPatch611(){
     var i=FC.i, rep=!!FC.rp[i], n=FC.n, r;
     FC.n=rep?i:i+1;
     try{ r=_S.apply(this,arguments); } finally{ FC.n=n; }
+    FC.shownAt=Date.now()+(i?280:0);   /* הצד הקדמי מתמלא אחרי 280ms */
     var c=document.getElementById('fc-count');
     if(c){ if(rep) c.textContent='🔁 עוד פעם המילה הזאת'; else { var m=0; for(var j=0;j<=i;j++) if(!FC.rp[j]) m++; c.textContent='מילה '+m+' מתוך '+n; } }
     stats(); return r;
@@ -15044,20 +15053,26 @@ function __fcPatch611(){
     ensure();
     var i=FC.i, w=FC.list[i], rep=!!FC.rp[i], n=FC.n, len=FC.list.length, r;
     FC.pv=w?{lv:w.lv,due:w.due}:null;
-    var slow=!!(knows&&w&&FC.shownAt&&Date.now()-FC.shownAt>SLOW_MS);
-    if(slow) knows=false;   /* 🐢 לקח יותר מ-6 שניות — נחשב "עוד לא שולטת" */
-    if(w){ FC.sh=FC.sh||[]; FC.sh.push({en:w.en,was:slowGet().indexOf(w.en)>=0,st:FC.st[w.en]}); if(FC.sh.length>60) FC.sh.shift(); }
+    var slow=false;
+    try{   /* תוספות — אם משהו בהן נכשל, הכרטיסייה ממשיכה לעבוד כרגיל */
+      slow=!!(knows&&w&&FC.shownAt&&Date.now()-FC.shownAt>SLOW_MS);
+      if(slow) knows=false;   /* 🐢 לקח יותר מ-6 שניות — נחשב "עוד לא שולטת" */
+      if(w){ FC.sh=FC.sh||[]; FC.sh.push({en:w.en,was:slowGet().indexOf(w.en)>=0,st:FC.st[w.en]}); if(FC.sh.length>60) FC.sh.shift(); }
+    }catch(e){ slow=false; }
     FC.n=rep?i:i+1;
     try{ r=_A.call(this,knows); } finally{ FC.n=n; }
     if(!w) return r;
-    if(FC.list.length>len) FC.list.length=len;   /* במקום לחזור רק בסוף הסבב */
-    if(!knows) addRep(w);
-    if(!rep) FC.st[w.en]=slow?'s':(knows?'k':'u');
-    if(slow) slowMark(w.en,true); else if(!rep) slowMark(w.en,false);
-    if(slow) msg('<span class="fc-slowmsg">🐢 ידעת, אבל לקח זמן — עוד נחזור עליה 🙂</span>');
-    else if(knows) msg((rep?'✓ יופי! זכרת הפעם 💪':'✓ יופי! ידעת')+'<button type="button" class="fc-fix" onclick="fcOops()">↩ טעיתי, לא ידעתי</button>');
-    else msg('<button type="button" class="fc-fix k" onclick="fcActually()">✓ דווקא ידעתי</button>');
-    stats(); return r;
+    try{
+      if(FC.list.length>len) FC.list.length=len;   /* במקום לחזור רק בסוף הסבב */
+      if(!knows) addRep(w);
+      if(!rep) FC.st[w.en]=slow?'s':(knows?'k':'u');
+      if(slow) slowMark(w.en,true); else if(!rep) slowMark(w.en,false);
+      if(slow) msg('<span class="fc-slowmsg">🐢 ידעת, אבל לקח זמן — עוד נחזור עליה 🙂</span>');
+      else if(knows) msg((rep?'✓ יופי! זכרת הפעם 💪':'✓ יופי! ידעת')+'<button type="button" class="fc-fix" onclick="fcOops()">↩ טעיתי, לא ידעתי</button>');
+      else msg('<button type="button" class="fc-fix k" onclick="fcActually()">✓ דווקא ידעתי</button>');
+      stats();
+    }catch(e){}
+    return r;
   };
 
   /* ↩ סימנתי "יודעת" בטעות */
