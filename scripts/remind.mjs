@@ -5,7 +5,7 @@ import webpush from 'web-push';
 
 const API_KEY='AIzaSyAkpMP6QkJZS67fOvVwP3yeuz-gMu1150Q';
 const PROJECT='teach-me-cd228';
-const VAPID_PUB='BAir7yGUBVlVC1zIl4vAuEKWfqRUzGUB85vECJYelmTey4F-zq8DifRc7Py_KSpz6fnOfD5MJfAG4bTe3u99pGU';
+const VAPID_PUB='BP2DfRuPoADshH2Pa1jkpdeTA0id0OvlMayYX1E7G5oDirf1hOK9jccPk7ttX0cQeiXWhYyNQU1ZcKcFlSo1hig';
 const VAPID_PRIV=(process.env.VAPID_PRIVATE||'').trim().replace(/^["']+|["']+$/g,'');
 const APP='https://asyiphone1-glitch.github.io/Teach-me/';
 const NM={aviv:'אביב',roni:'רוני',hili:'הילי',ziv:'זיו'};
