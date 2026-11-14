@@ -12751,7 +12751,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611141930';
+  const TM_BUILD='202611142100';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -15884,6 +15884,57 @@ function __dadDelPatch(){
       '<button type="button" class="mm-btn" data-upsk="'+E(ex.id)+'"><span class="mm-ic">🖨️</span><span><b>חוברת סיכום להדפסה</b><small>כל החומר · דף שינון · שאלות</small></span></button></div>');
   },700);
   window.TM_UPDOC={openMap,printBook};
+})();
+</script>
+
+<style>
+/* ✖️ לוח הכפל לאביב (14.11.2026) */
+#kefOv{position:fixed;inset:0;z-index:70;background:#FBF6EC;display:none;flex-direction:column;padding-top:env(safe-area-inset-top,0px);}
+#kefOv.show{display:flex;}
+html:has(#kefOv.show),html:has(#kefOv.show) body{overflow:hidden;overscroll-behavior:none;}
+#kefOv .dict-bar{display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:8px 14px;border-bottom:1px solid #E7DFCC;background:#FBF6EC;font-family:'Heebo',sans-serif;}
+#kefOv .dict-bar b{flex:1;}
+#kefOv .nv-sq{background:#fff;border:2px solid #E1D6BF;color:#3A2E22;}
+#kefOv iframe{flex:1;width:100%;border:0;display:block;}
+</style>
+<script>
+/* ✖️ לוח הכפל לאביב (14.11.2026): כפתור בתפריט שלה → kefel.html (20 תרגילים, כפל 1–10 וחילוק הפוך, ציון) */
+(function(){
+  const KEF_FOR=['aviv'];
+  const $=id=>document.getElementById(id);
+  const SV_B='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h14M13 5.5l6.5 6.5-6.5 6.5"/></svg>';
+  const SV_H='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.8 1.9 11.3c-.4.3-.1 1 .4 1H4.6v8.2c0 .4.3.7.7.7h4.6v-5.7h4.2v5.7h4.6c.4 0 .7-.3.7-.7v-8.2h2.3c.5 0 .8-.7.4-1Z"/></svg>';
+  function openKef(){
+    if(typeof PROFILE==='undefined'||!PROFILE) return;
+    let ov=$('kefOv');
+    if(!ov){
+      ov=document.createElement('div'); ov.id='kefOv';
+      ov.innerHTML='<div class="dict-bar"><span class="nv-pair"><button type="button" class="nv-sq" id="kefBack" aria-label="מסך אחד אחורה" title="מסך אחד אחורה">'+SV_B+'</button><button type="button" class="nv-sq" id="kefHome" aria-label="למסך הבית" title="למסך הבית">'+SV_H+'</button></span><b>✖️ לוח הכפל</b></div><iframe id="kefFrame" title="לוח הכפל"></iframe>';
+      document.body.appendChild(ov);
+      $('kefBack').onclick=closeKef; $('kefHome').onclick=closeKef;
+    }
+    $('kefFrame').src='kefel.html#p='+encodeURIComponent(PROFILE.name)+'&pid='+encodeURIComponent(PROFILE.id);
+    ov.classList.add('show'); document.body.style.overflow='hidden';
+    const hub=$('hub'); if(hub) hub.classList.add('hide');
+    try{ tStart(); }catch(e){}
+  }
+  function closeKef(){
+    const ov=$('kefOv'); if(!ov) return;
+    $('kefFrame').src='about:blank'; ov.classList.remove('show'); document.body.style.overflow='';
+    showHub();
+  }
+  window.addEventListener('message',ev=>{ const d=ev.data; const fr=$('kefFrame');
+    if(d&&d.tm==='kefelClose'&&fr&&ev.source===fr.contentWindow) closeKef(); });
+  function kefBtn(){
+    if(typeof PROFILE==='undefined'||!PROFILE||KEF_FOR.indexOf(PROFILE.id)<0) return;
+    const grid=document.querySelector('#hubBox .hub-grid'); if(!grid||$('hubKef')) return;
+    const b=document.createElement('button'); b.type='button'; b.className='hub-sbtn'; b.id='hubKef';
+    b.innerHTML='<span class="ic">✖️</span>לוח הכפל'; b.onclick=openKef;
+    grid.appendChild(b);
+    grid.classList.remove('solo');
+  }
+  if(typeof window.showHub==='function'){ const _sh=window.showHub; window.showHub=function(){ const r=_sh.apply(this,arguments); try{ kefBtn(); }catch(e){} setTimeout(()=>{ try{ kefBtn(); }catch(e){} },350); return r; }; }
+  window.TM_KEF={open:openKef,close:closeKef};
 })();
 </script>
 </body></html>
