@@ -15640,7 +15640,7 @@ function __dadDelPatch(){
 
   /* ---------- 14 · 🔔 תזכורות לבחינות גם כשהאפליקציה סגורה ----------
      Web Push רגיל (חינם). שרת: GitHub Actions (.github/workflows/reminders.yml) — כל בוקר ב-07:30 ובערב ב-17:00. */
-  const VAPID='BP2DfRuPoADshH2Pa1jkpdeTA0id0OvlMayYX1E7G5oDirf1hOK9jccPk7ttX0cQeiXWhYyNQU1ZcKcFlSo1hig';
+  const VAPID='BAir7yGUBVlVC1zIl4vAuEKWfqRUzGUB85vECJYelmTey4F-zq8DifRc7Py_KSpz6fnOfD5MJfAG4bTe3u99pGU';
   const pushOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
   const iosNotInstalled=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches);
   const b64=s=>{ const p='='.repeat((4-s.length%4)%4), b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/')); const a=new Uint8Array(b.length); for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; };
