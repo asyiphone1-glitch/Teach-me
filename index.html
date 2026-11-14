@@ -4600,10 +4600,11 @@ const MT=[
  {k:'cmx', n:'השוואת שברים ומספרים מעורבים', pg:'עמוד 10 · תרגיל 18', ic:'🆚', ty:['cmpMixed']},
  {k:'sden',n:'השוואת שברים — מכנים שווים', pg:'עמוד 19', ic:'🍕', ty:['cmpSameDen','cmpSameDen','fillSameDen','chainSameDen']},
  {k:'snum',n:'השוואת שברים — מונים שווים', pg:'עמוד 20', ic:'🍰', ty:['cmpSameNum','cmpSameNum','fillSameNum','chainSameNum']},
- {k:'half',n:'השוואה לחצי', pg:'עמוד 23', ic:'🌓', ty:['halfEq','vsHalf','vsHalf','cmpViaHalf']}
+ {k:'half',n:'השוואה לחצי', pg:'עמוד 23', ic:'🌓', ty:['halfEq','vsHalf','vsHalf','cmpViaHalf']},
+ {k:'add', n:'חיבור שברים — מכנים שונים', pg:'דף התרגול של אבא (14.11)', ic:'➕', ty:['addMult','addDiff','addDiff']}
 ];
 /* זמן יעד (שניות) לכל סוג — במשחקי הזמן */
-const MT_T={toMixed:22,toImproper:15,wholeToFrac:12,classify1:6,cmpVs1:8,cond:15,digits:18,between:10,vsWhole:12,cmpMixed:18,cmpSameDen:6,fillSameDen:10,chainSameDen:14,cmpSameNum:7,fillSameNum:10,chainSameNum:14,halfEq:9,vsHalf:8,cmpViaHalf:10,colorHalf:30};
+const MT_T={toMixed:22,toImproper:15,wholeToFrac:12,classify1:6,cmpVs1:8,cond:15,digits:18,between:10,vsWhole:12,cmpMixed:18,cmpSameDen:6,fillSameDen:10,chainSameDen:14,cmpSameNum:7,fillSameNum:10,chainSameNum:14,halfEq:9,vsHalf:8,cmpViaHalf:10,colorHalf:30,addMult:30,addDiff:45};
 function mTopicOf(t){ if(t==='colorHalf') return 'half'; const T=MT.find(x=>x.ty.includes(t)); return T?T.k:'mix'; }
 
 const MTY={
@@ -4756,6 +4757,32 @@ const MTY={
     show:'צובעים '+(N/2)+' חלקים: '+mL(mF(1,2)+' = '+mF(N/2,N)),explain:'בצורה יש '+N+' חלקים. חצי מהם = '+(N/2)+' חלקים. לכן '+mL(mF(1,2)+' = '+mF(N/2,N)),hint:'כמה חלקים יש בצורה? חצי מהם — זה כמה צריך לצבוע.'};
  }}
 };
+/* ➕ חיבור שברים עם מכנים שונים (14.11.2026, לפי הדף של אבא).
+   התשובה: שבר אחד — מונה למעלה, מכנה למטה. כל שבר שווה נחשב נכון (גם בלי לצמצם, גם גדול מ-1). */
+function mGcd(a,b){ while(b){ const t=b; b=a%b; a=t; } return a; }
+function mLcm(a,b){ return a/mGcd(a,b)*b; }
+function mMults(x,L){ const a=[]; for(let k=x;k<=L;k+=x) a.push(k); return a; }
+function mAddItem({a,b,c,d}){
+  const L=mLcm(b,d), A=a*(L/b), C=c*(L/d), S=A+C, g=mGcd(S,L), rn=S/g, rd=L/g;
+  const fin=mF(rn,rd)+(rn>rd&&rn%rd?' = '+mR(rn,rd,'mix'):(rn%rd===0?' = '+(rn/rd):''));
+  const step1=(L===b||L===d)
+    ?'המכנה '+Math.max(b,d)+' מתחלק ב-'+Math.min(b,d)+', אז <b>המכנה המשותף הוא '+L+'</b>.'
+    :'כפולות של '+b+': '+mL(mMults(b,L).join(', '))+'. כפולות של '+d+': '+mL(mMults(d,L).join(', '))+'. המספר הראשון שמופיע בשתיהן: <b>'+L+'</b>.';
+  const ext=(n,m)=>m===L?mL(mF(n,m))+' נשאר':mL(mF(n,m)+' = '+mF(n*(L/m),L))+' (כפול '+(L/m)+' למעלה ולמטה)';
+  const it={kind:'keypad',ins:'פתרי את התרגיל<small>אפשר לכתוב גם בלי לצמצם</small>',q:a+'/'+b+' + '+c+'/'+d+' = ?',
+    expr:mF(a,b)+mOP('+')+mF(c,d)+mEQ+mF(mBX('n'),mBX('d')),
+    show:mL(mF(a,b)+' + '+mF(c,d)+' = '+mF(S,L)+(g>1?' = '+fin:(rn>rd?' = '+mR(rn,rd,'mix'):''))),
+    explain:'1️⃣ '+step1+'<br>2️⃣ מרחיבים: '+ext(a,b)+', '+ext(c,d)+'.<br>3️⃣ מחברים רק את המונים: '+mL(A+'+'+C+'='+S)+'. המכנה נשאר '+L+': '+mL(mF(S,L))+(g>1?'<br>4️⃣ מצמצמים: '+mL(mF(S,L)+' = '+fin):(rn>rd?'<br>4️⃣ כמספר מעורב: '+mL(mR(rn,rd,'mix')):'')),
+    hint:'1️⃣ מוצאים מכנה משותף — מספר שגם '+b+' וגם '+d+' נכנסים בו. 2️⃣ מרחיבים כל שבר. 3️⃣ מחברים רק את המונים. ⚠️ את המכנים לא מחברים!'};
+  it.check=v=>{ const n=+v.n, m=+v.d; if(!(m>0)||!(n>=0)) return false; const ok=n*L===S*m;
+    if(ok){ const gg=mGcd(n,m); it.okNote=gg>1?'אפשר גם לצמצם: '+mL(mF(n,m)+' = '+fin):(n>m&&n%m?'אפשר לכתוב גם כמספר מעורב: '+mL(mR(n,m,'mix')):''); }
+    return ok; };
+  return it;
+}
+MTY.addMult={gen(){ for(;;){ const d1=mri(2,6), k=mpick([2,2,3,4]), d2=d1*k; if(d2>16) continue; const a=mri(1,d1-1), c=mri(1,d2-1); return Math.random()<.7?{a,b:d1,c,d:d2}:{a:c,b:d2,c:a,d:d1}; } },
+  build:mAddItem};
+MTY.addDiff={gen(){ for(;;){ const b=mri(2,8), d=mri(2,8); if(b===d||b%d===0||d%b===0) continue; const L=mLcm(b,d); if(L>40) continue; const a=mri(1,b-1), c=mri(1,d-1); return {a,b,c,d}; } },
+  build:mAddItem};
 function mBuild(spec){ const it=MTY[spec.t].build(spec.p); it.t=spec.t; it.spec=spec; const T=MT.find(x=>x.k===mTopicOf(spec.t)); it.tp='חשבון · '+(T?T.n:''); return it; }
 function mMake(t){ return mBuild({t,p:MTY[t].gen()}); }
 function mMakeUnique(t,seen){ for(let g=0;g<12;g++){ const it=mMake(t), k=JSON.stringify(it.spec); if(!seen.has(k)){ seen.add(k); return it; } } return mMake(t); }
@@ -4942,6 +4969,7 @@ function mLearn(){
   h+=C('sden','השוואה — מכנים שווים','<p>כשהמכנים שווים, כל החלקים באותו גודל. <b>מונה גדול יותר = שבר גדול יותר.</b></p>'+mBars(2,7)+mBars(5,7)+'<div class="mbars-lbl">'+mL(mF(2,7)+' < '+mF(5,7))+'</div>');
   h+=C('snum','השוואה — מונים שווים','<p>כשהמונים שווים, יש אותו מספר חלקים — אבל בגודל שונה. <b>מכנה קטן = חלקים גדולים = שבר גדול.</b></p>'+mBars(1,3)+mBars(1,8)+'<div class="mbars-lbl">'+mL(mF(1,3)+' > '+mF(1,8))+'</div><p class="warn">זה ״הפוך״ מהרגיל — ככה זוכרים: פיצה ל-3 אנשים נותנת פרוסה גדולה יותר מפיצה ל-8.</p>');
   h+=C('half','השוואה לחצי','<p>שבר שווה ל-½ כשהמונה הוא <b>בדיוק חצי</b> מהמכנה: '+mL(mF(1,2)+' = '+mF(2,4)+' = '+mF(3,6)+' = '+mF(5,10))+'</p><p><b>טריק:</b> מכפילים את המונה ב-2 ומשווים למכנה. '+mL(mF(3,8))+': '+mL('3×2=6')+', ו-6 קטן מ-8 ← קטן מחצי.</p><div class="ex">להשוות '+mL(mF(3,4))+' ו-'+mL(mF(1,5))+': '+mL(mF(3,4))+' גדול מחצי, '+mL(mF(1,5))+' קטן מחצי ← '+mL(mF(3,4)+' > '+mF(1,5))+'</div>');
+  h+=C('add','חיבור שברים — מכנים שונים','<p>אפשר לחבר רק חלקים <b>באותו גודל</b>. לכן קודם מביאים את שני השברים לאותו מכנה.</p><div class="ex">'+mL(mF(1,3)+' + '+mF(1,2))+'<br>1️⃣ כפולות של 3: '+mL('3, 6')+' · כפולות של 2: '+mL('2, 4, 6')+' ← המכנה המשותף: <b>6</b><br>2️⃣ '+mL(mF(1,3)+' = '+mF(2,6))+' ו-'+mL(mF(1,2)+' = '+mF(3,6))+'<br>3️⃣ מחברים רק את המונים: '+mL(mF(2,6)+' + '+mF(3,6)+' = '+mF(5,6))+'</div>'+mBars(2,6)+mBars(3,6)+mBars(5,6)+'<div class="mbars-lbl">'+mL(mF(2,6)+' + '+mF(3,6)+' = '+mF(5,6))+'</div><p>💡 <b>קיצור דרך:</b> אם מכנה אחד נכנס בשני (כמו 4 ו-8), המכנה הגדול הוא המכנה המשותף: '+mL(mF(1,4)+' + '+mF(2,8)+' = '+mF(2,8)+' + '+mF(2,8)+' = '+mF(4,8))+'</p><p class="warn">⚠️ <b>את המכנים לא מחברים!</b> '+mL(mF(1,3)+' + '+mF(1,2))+' זה לא '+mL(mF(2,5))+'.</p>');
   const body=mEl('mBody'); body.innerHTML=h;
   body.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>mPractice(b.dataset.p));
   mTop();
