@@ -1,7 +1,7 @@
-/* teach-me — פתיחה מיידית (10.11.2026).
-   הקבצים של האפליקציה נפתחים מיד מהזיכרון של הטלפון, ובמקביל הגרסה החדשה יורדת ברקע.
-   בפתיחה הבאה כבר רואים אותה. בפעם הראשונה (או אם אין שום דבר בזיכרון) — מהרשת. */
-const C='tm-v15';
+/* teach-me — תמיד הגרסה החדשה (14.11.2026, אושר).
+   קבצי האפליקציה (html/js): קודם מהרשת — כך כל חומר חדש מגיע מיד. אם אין אינטרנט, או שהרשת איטית מ-4 שניות —
+   מהזיכרון של הטלפון (והגרסה החדשה ממשיכה לרדת ברקע). תמונות, אייקונים וגופנים: מהזיכרון, ומתעדכנים ברקע. */
+const C='tm-v16';
 const CORE=['./','index.html','firebase-bridge.js','manifest.webmanifest','icon-192.png','dictation.html','kefel.html','t3d.js','lib/three-r128.min.js'];
 self.addEventListener('install',e=>{ self.skipWaiting(); e.waitUntil(caches.open(C).then(c=>c.addAll(CORE).catch(()=>{}))); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
@@ -11,11 +11,24 @@ self.addEventListener('fetch',e=>{
   const mine=u.origin===location.origin, cdn=/gstatic\.com\/firebasejs|fonts\.(googleapis|gstatic)\.com/.test(u.href);
   if(!mine&&!cdn) return;
   const key=mine?new Request(u.origin+u.pathname):r;   /* בלי #קוד-ילדה ובלי ?פרמטרים — אותו קובץ */
-  e.respondWith(caches.open(C).then(c=>c.match(key).then(hit=>{
-    const net=fetch(r,mine?{cache:'no-cache'}:undefined).then(res=>{ if(res&&(res.ok||res.type==='opaque')) c.put(key,res.clone()); return res; });
-    if(hit){ e.waitUntil(net.catch(()=>{})); return hit; }
-    return net.catch(()=>c.match('index.html'));
-  })));
+  const fresh=mine&&(r.mode==='navigate'||/(\/|\.html|\.js|\.webmanifest)$/.test(u.pathname));
+  e.respondWith(caches.open(C).then(c=>{
+    const net=fetch(r,mine?{cache:'no-cache'}:undefined).then(res=>{ if(res&&(res.ok||res.type==='opaque')) c.put(key,res.clone()).catch(()=>{}); return res; });
+    if(fresh){
+      /* קודם רשת; אם נכשלה או איטית — מהזיכרון */
+      return new Promise(done=>{
+        let over=false; const fin=x=>{ if(!over){ over=true; done(x); } };
+        const fromCache=()=>c.match(key).then(h=>h||c.match('index.html')).then(h=>{ if(h) fin(h); else net.then(fin,()=>fin(Response.error())); });
+        const t=setTimeout(fromCache,4000);
+        net.then(res=>{ clearTimeout(t); if(res&&res.ok) fin(res); else fromCache(); },()=>{ clearTimeout(t); fromCache(); });
+        e.waitUntil(net.catch(()=>{}));
+      });
+    }
+    return c.match(key).then(hit=>{
+      if(hit){ e.waitUntil(net.catch(()=>{})); return hit; }
+      return net.catch(()=>c.match('index.html'));
+    });
+  }));
 });
 
 /* 🔔 תזכורות לבחינות גם כשהאפליקציה סגורה (10.11.2026) */

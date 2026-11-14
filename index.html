@@ -12761,7 +12761,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611142200';
+  const TM_BUILD='202611142300';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -12860,6 +12860,18 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
     try{ D.collection('meta').onSnapshot(snap=>{ (snap.docs||[]).forEach(d=>{ const x=d.data&&d.data(); if(x&&x.kind==='build') onBuild(x.b); }); },()=>{}); }catch(e){}
   })(0);
   document.addEventListener('visibilitychange',()=>{ if(document.hidden) return; const D=db(); if(!D) return; D.doc('meta/build').get().then(s=>{ if(s&&s.exists) onBuild((s.data()||{}).b); }).catch(()=>{}); });
+  /* 14.11.2026 (אושר): באייפון, חזרה לאפליקציה מהמסך הראשי רק ״ממשיכה״ אותה ולא טוענת מחדש.
+     אם היא הייתה ברקע יותר מ-5 דקות, והילדה במסך הראשי שלה (לא באמצע שאלה) — בודקים אם יש גרסה חדשה וטוענים אותה לבד. */
+  let hidAt=0;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){ hidAt=Date.now(); return; }
+    if(!hidAt||Date.now()-hidAt<5*60*1000) return; hidAt=0;
+    fetch('index.html',{cache:'no-store'}).then(r=>r.ok?r.text():'').then(t=>{
+      const m=/const TM_BUILD='(\d+)'/.exec(t||''); if(!m||m[1]<=TM_BUILD) return;
+      const gate=document.getElementById('gate'), atHome=hubOpen()||(gate&&gate.offsetParent);
+      if(atHome&&!ovOpen()) location.reload(); else showUpd(m[1]);
+    }).catch(()=>{});
+  });
 
   /* ---------- 🌙 מצב ערב (20:00–06:00) ---------- */
   const eve=document.createElement('div'); eve.id='tmEveTint'; eve.setAttribute('aria-hidden','true'); document.body.appendChild(eve);
