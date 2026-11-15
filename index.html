@@ -12782,7 +12782,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611151030';
+  const TM_BUILD='202611151035';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -13755,8 +13755,11 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
   }
   function hit(e){
     const a=e.target&&e.target.closest&&e.target.closest('.gq-tg'); if(!a) return;
-    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    /* 15.11.2026 תיקון באג: preventDefault על touchstart/pointerdown בטלפון מבטל את ה-click — והמתג לא הגיב בכלל.
+       עכשיו עוצרים רק את ההתפשטות במגע, ומבטלים ברירת מחדל רק ב-click עצמו. */
+    e.stopPropagation(); e.stopImmediatePropagation();
     if(e.type!=='click') return;
+    e.preventDefault();
     const id=a.dataset.id; if(!id) return;
     if(isEnded(id)){ delete ENDED[id]; save(); endPush(id,0); }
     else {
