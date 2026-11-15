@@ -6,11 +6,14 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_call:        # 15.11.2026: רשת הביטחון קוראת לזה אחרי שהעדכון עבר ל-main
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: check secret
         id: s
         run: echo "ok=${{ secrets.FIREBASE_SA != '' }}" >> $GITHUB_OUTPUT

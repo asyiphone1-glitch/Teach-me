@@ -1,0 +1,56 @@
+# teach-me — 🛡️ רשת ביטחון (15.11.2026, אושר בישיבת צוות)
+# כל עדכון נדחף קודם לענף dev. כאן הוא נבדק בחינם (GitHub Actions, לא מהקרדיט של Claude):
+#   1. תחביר בכל הקבצים
+#   2. מאות לחיצות באצבע בדפדפן בגודל אייפון, עם ענן מדומה
+# רק אם הכול עובר — העדכון עובר ל-main, ומשם ל-GitHub Pages (האפליקציה של הבנות).
+# אם משהו נכשל — הבנות ממשיכות עם הגרסה הקודמת, ו-GitHub שולח מייל.
+name: safety-net
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+concurrency:
+  group: safety-net
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 🔤 תחביר
+        run: |
+          node scripts/check-syntax.mjs
+          node --check scripts/remind.mjs
+      - name: התקנת דפדפן
+        run: |
+          npm install --no-save playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - name: 👆 לחיצות באצבע (אייפון)
+        run: node scripts/tap-test.mjs
+        env:
+          TAPS: '60'
+  promote:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: ✅ עובר לבנות (main)
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor origin/main HEAD; then
+            echo "::error::ב-main יש שינוי שלא נמצא ב-dev. צריך קודם למזג את main לתוך dev."
+            exit 1
+          fi
+          git push origin HEAD:main
+  firebase:
+    needs: promote
+    uses: ./.github/workflows/deploy-firebase.yml
+    secrets: inherit

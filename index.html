@@ -2,6 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<script src="tm-err.js"></script>
 <!-- 8.11.2026: teach-me כאפליקציה עצמאית (GitHub Pages + Firebase) -->
 <script src="firebase-bridge.js"></script>
 <script>document.documentElement.classList.add('tm-standalone');</script>
@@ -10449,14 +10450,23 @@ const AV_WEEKS=[
   }
 
   /* ---- נוכחות ---- */
+  /* 15.11.2026 (אושר — מצב הטלפונים): מה מצב הטלפון שממנו נכנסה. sa = מותקנת במסך הבית, nt = הרשאת התראות, ps = הטלפון לא ימחק את הנתונים */
+  function hw(){
+    let sa=false, nt='none', ps=null;
+    try{ sa=!!(navigator.standalone||matchMedia('(display-mode: standalone)').matches); }catch(e){}
+    try{ if('Notification' in window) nt=Notification.permission; }catch(e){}
+    try{ const v=localStorage.getItem('tm_ps'); ps=v==null?null:v==='1'; }catch(e){}
+    const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
+    return {sa,nt,ps,os:ios?'ios':/Android/.test(navigator.userAgent)?'android':'other'};
+  }
   async function beat(force){
     if(!DB) return;
     const pid=inApp()?PROFILE.id:null;
     try{
-      if(curPid&&curPid!==pid){ await DB.doc('presence/'+curPid).set({pid:curPid,on:false,at:Date.now(),act:lastAct,since:since,dev:devId()}); }
+      if(curPid&&curPid!==pid){ await DB.doc('presence/'+curPid).set(Object.assign({pid:curPid,on:false,at:Date.now(),act:lastAct,since:since,dev:devId()},hw())); }
       if(pid){
         if(curPid!==pid) since=Date.now();
-        await DB.doc('presence/'+pid).set({pid,on:true,at:Date.now(),act:lastAct,since:since,dev:devId()});
+        await DB.doc('presence/'+pid).set(Object.assign({pid,on:true,at:Date.now(),act:lastAct,since:since,dev:devId()},hw()));
       }
       curPid=pid;
     }catch(e){}
@@ -12804,7 +12814,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611151700';
+  const TM_BUILD='202611152230';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -16036,4 +16046,290 @@ html:has(#kefOv.show),html:has(#kefOv.show) body{overflow:hidden;overscroll-beha
   window.TM_KEF={open:openKef,close:closeKef};
 })();
 </script>
+<style>
+/* ===== 15.11.2026 — אושר בישיבת צוות: קופסה שחורה · מצב הטלפונים · כוכבי הלכת · חגיגה ===== */
+.tm-hc{background:var(--surface,#fff);border:2px solid var(--line,#E1D6BF);border-radius:16px;padding:12px 14px;margin:0 0 12px;}
+.tm-hc h3{margin:0 0 8px;font-size:1.05rem;}
+.tm-hc .r{display:grid;grid-template-columns:4.2em 1fr 1fr 1.25fr;gap:6px;align-items:center;padding:7px 0;border-top:1px dashed var(--line,#E1D6BF);font-size:.9rem;}
+.tm-hc .r.h{border-top:none;color:var(--muted,#7A6A55);font-size:.78rem;padding-top:0;}
+.tm-hc .r b{font-size:.95rem;}
+.tm-hc .ok{color:#17794D;} .tm-hc .no{color:#B42318;} .tm-hc .mu{color:var(--muted,#7A6A55);}
+.tm-hc .e{padding:8px 0;border-top:1px dashed var(--line,#E1D6BF);font-size:.88rem;line-height:1.45;}
+.tm-hc .e:first-of-type{border-top:none;}
+.tm-hc .e code{display:block;direction:ltr;text-align:left;font-size:.74rem;color:var(--muted,#7A6A55);word-break:break-word;margin-top:2px;}
+.tm-hc .note{font-size:.78rem;color:var(--muted,#7A6A55);margin-top:6px;}
+.tm-hc.bad{border-color:#E8A23A;}
+/* 🎉 חגיגה */
+#tmCel{position:fixed;inset:0;z-index:9000;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:calc(6vh + env(safe-area-inset-bottom,0px));}
+#tmCel .msg{font-family:'Heebo',sans-serif;font-weight:800;font-size:1.7rem;color:#1C2233;background:#FFF6D8;border:3px solid #F2B134;border-radius:22px;padding:8px 20px;margin-bottom:10px;animation:tmPop .45s ease-out both;}
+#tmCel img{height:44vh;max-height:380px;width:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.18));transform-origin:50% 100%;animation:tmDance .55s ease-in-out infinite alternate;}
+#tmCel i{position:absolute;top:-16px;width:10px;height:14px;border-radius:2px;animation:tmFall linear forwards;}
+@keyframes tmDance{0%{transform:rotate(-7deg) translateY(0)}50%{transform:rotate(0) translateY(-18px)}100%{transform:rotate(7deg) translateY(0)}}
+@keyframes tmPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes tmFall{to{transform:translateY(110vh) rotate(720deg);}}
+@media (prefers-reduced-motion:reduce){#tmCel img{animation:none}#tmCel i{display:none}}
+/* 🪐 סדרי את כוכבי הלכת */
+#tmPl{position:fixed;inset:0;z-index:75;background:#0E1630;color:#fff;display:none;flex-direction:column;font-family:'Heebo',sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior:none;touch-action:manipulation;}
+#tmPl.show{display:flex;}
+html:has(#tmPl.show),html:has(#tmPl.show) body{overflow:hidden;}
+#tmPl .pl-top{display:flex;align-items:center;gap:10px;padding:8px 12px;}
+#tmPl .pl-top h2{flex:1;margin:0;font-size:1.15rem;font-weight:700;}
+#tmPl .pl-x{width:48px;height:48px;border-radius:14px;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:1.3rem;}
+#tmPl .pl-ins{text-align:center;font-size:1rem;color:#C9D3F5;margin:0 0 4px;}
+#tmPl .pl-sun{display:flex;align-items:center;justify-content:center;gap:8px;font-size:.95rem;color:#FFD66B;}
+#tmPl .pl-sun span{font-size:1.8rem;}
+#tmPl .pl-track{flex:1;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:2px 16px;min-height:0;}
+#tmPl .pl-s{display:flex;align-items:center;gap:10px;height:32px;flex:0 0 auto;border:2px dashed rgba(255,255,255,.25);border-radius:12px;padding:0 10px;font-size:1rem;}
+#tmPl .pl-s .n{width:24px;text-align:center;color:#8D9AC8;font-weight:700;}
+#tmPl .pl-s.on{border:2px solid #3CCB7F;background:rgba(60,203,127,.12);}
+#tmPl .pl-s.next{border-color:#FFD66B;}
+#tmPl .pl-belt{text-align:center;font-size:.8rem;color:#B7A98F;height:16px;line-height:16px;flex:0 0 auto;visibility:hidden;}
+#tmPl .pl-end .mp{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;margin-top:6px;font-size:.92rem;text-align:start;}
+#tmPl .pl-belt.on{visibility:visible;}
+#tmPl .pl-hint{min-height:40px;text-align:center;font-size:.95rem;color:#FFD66B;padding:2px 12px;}
+#tmPl .pl-bank{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:6px 12px 12px;}
+#tmPl .pl-c{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:56px;border-radius:14px;border:2px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;font-family:inherit;font-size:.82rem;padding:6px 2px;}
+#tmPl .pl-c:active{transform:scale(.95);}
+#tmPl .pl-c.used{visibility:hidden;}
+#tmPl .pl-c.bad{animation:tmShake .35s;border-color:#FF6B6B;}
+@keyframes tmShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#tmPl .pb{display:inline-block;border-radius:50%;flex:0 0 auto;}
+#tmPl .pl-end{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center;}
+#tmPl .pl-end .big{font-size:3rem;}
+#tmPl .pl-end h3{margin:0;font-size:1.5rem;}
+#tmPl .pl-end .tr{background:rgba(255,214,107,.12);border:1px solid #FFD66B;border-radius:14px;padding:10px 12px;font-size:1rem;line-height:1.6;color:#FFE8A8;}
+#tmPl .pl-end button{min-height:56px;border-radius:16px;border:0;font-family:inherit;font-size:1.1rem;font-weight:700;width:100%;max-width:320px;}
+#tmPl .pl-again{background:#FFD66B;color:#1C2233;}
+#tmPl .pl-close{background:rgba(255,255,255,.12);color:#fff;}
+</style>
+<script>
+/* ===== 15.11.2026 — אושר בישיבת צוות (ההורה): 2 🗃️ קופסה שחורה · 3 📱 מצב הטלפונים · 5 🪐 כוכבי הלכת להילי · 8 🎉 חגיגה בסוף סבב ===== */
+(function(){
+  const $=id=>document.getElementById(id);
+  const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const KIDS4=['aviv','roni','hili','ziv'];
+  const nm=pid=>(typeof PROFILES!=='undefined'&&PROFILES[pid]&&PROFILES[pid].name)||({aviv:'אביב',roni:'רוני',hili:'הילי',ziv:'זיו',dad:'אבא',parent:'הורה'}[pid])||'';
+  const curPid=()=>{ try{ return (typeof PROFILE!=='undefined'&&PROFILE)?PROFILE.id:null; }catch(e){ return null; } };
+  window.TM_WHO=curPid;   /* לקופסה השחורה בתוך הכתבה ולוח הכפל */
+  function ago(t){ if(!t) return '—'; const m=Math.round((Date.now()-t)/60000); if(m<1) return 'עכשיו'; if(m<60) return 'לפני '+m+' דק׳'; const h=Math.round(m/60); if(h<24) return h===1?'לפני שעה':'לפני '+h+' שעות'; const d=Math.round(h/24); return d===1?'אתמול':'לפני '+d+' ימים'; }
+
+  /* ---------- 3 · 📱 שהטלפון לא ימחק את הנתונים (persist) ---------- */
+  try{
+    if(navigator.storage&&navigator.storage.persisted){
+      navigator.storage.persisted().then(p=>p?true:navigator.storage.persist()).then(r=>{ try{ localStorage.setItem('tm_ps',r?'1':'0'); }catch(e){} }).catch(()=>{});
+    }
+  }catch(e){}
+
+  /* ---------- 2 · 🗃️ קופסה שחורה: שליחת התקלות לענן ---------- */
+  function hash(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return (h>>>0).toString(36); }
+  let sending=false;
+  async function errFlush(){
+    if(sending||typeof DB==='undefined'||!DB||!window.TM_ERRQ) return;
+    const Q=TM_ERRQ.get(); if(!Q.length) return;
+    sending=true;
+    let sent={}; try{ sent=JSON.parse(localStorage.getItem('tm_errsent')||'{}')||{}; }catch(e){}
+    const today=dayKey(Date.now()); if(sent._d!==today) sent={_d:today};
+    const left=[];
+    for(const x of Q){
+      const day=dayKey(x.t||Date.now()), id=day+'_'+devId()+'_'+hash(x.m+'|'+x.s);
+      const n=(sent[id]||0)+(x.n||1);
+      try{
+        await DB.doc('err/'+id).set({day,dev:devId(),m:x.m,s:x.s,p:x.p||'',w:x.w||'',b:x.b||'',n,t:x.t||Date.now(),ua:(navigator.userAgent.match(/iPhone OS [\d_]+|Android [\d.]+|Mac OS X [\d_]+|Windows NT [\d.]+/)||[''])[0]});
+        if(day===today) sent[id]=n;
+      }catch(e){ left.push(x); }
+    }
+    TM_ERRQ.set(left);
+    try{ localStorage.setItem('tm_errsent',JSON.stringify(sent)); }catch(e){}
+    sending=false;
+  }
+  setTimeout(errFlush,8000); setInterval(errFlush,60000);
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden) errFlush(); });
+
+  /* ---------- אזור ההורים: ⚠️ תקלות השבוע + 📱 הטלפונים של הבנות ---------- */
+  async function errCard(){
+    const c=document.createElement('div'); c.id='dErr'; c.className='tm-hc';
+    c.innerHTML='<h3>🗃️ תקלות השבוע</h3><div class="note">בודק…</div>';
+    (async()=>{
+      let L=[];
+      try{
+        if(DB){ const col=DB.collection('err'), from=dayKey(Date.now()-6*864e5);
+          const snap=col.since?await col.since(from).get():await col.get();
+          snap.docs.forEach(d=>{ const b=d.data()||{}; if(b.day>=from) L.push(b); }); }
+      }catch(e){ c.innerHTML='<h3>🗃️ תקלות השבוע</h3><div class="note">אין חיבור לענן כרגע.</div>'; return; }
+      try{ (TM_ERRQ.get()||[]).forEach(x=>L.push({m:x.m,s:x.s,w:x.w,n:x.n,t:x.t,p:x.p,local:1})); }catch(e){}
+      const G={};
+      L.forEach(x=>{ const k=x.m+'|'+x.s; const g=G[k]||(G[k]={m:x.m,s:x.s,p:x.p,n:0,t:0,w:new Set()}); g.n+=x.n||1; g.t=Math.max(g.t,x.t||0); if(x.w) g.w.add(x.w); });
+      const A=Object.values(G).sort((a,b)=>b.t-a.t);
+      if(!A.length){ c.className='tm-hc'; c.innerHTML='<h3>🗃️ תקלות השבוע</h3><div class="e">✅ אין תקלות השבוע</div>'; return; }
+      const where={index:'',dictation:' · בהכתבה',kefel:' · בלוח הכפל'};
+      c.className='tm-hc bad';
+      c.innerHTML='<h3>⚠️ תקלות השבוע ('+A.length+')</h3>'+A.slice(0,8).map(g=>'<div class="e">🐞 <b>'+E([...g.w].map(nm).filter(Boolean).join(', ')||'לא ידוע')+'</b>'+E(where[g.p]||'')+' · '+g.n+(g.n===1?' פעם':' פעמים')+' · '+E(ago(g.t))+'<code>'+E(g.m)+' — '+E(g.s)+'</code></div>').join('')+
+        (A.length>8?'<div class="note">ועוד '+(A.length-8)+'…</div>':'')+'<div class="note">אפשר להעתיק את זה ל-Claude, והוא יתקן.</div>';
+    })();
+    return c;
+  }
+  async function phoneCard(){
+    const c=document.createElement('div'); c.id='dPhones'; c.className='tm-hc';
+    const PR={};
+    const paint=(push)=>{
+      const rows=KIDS4.map(pid=>{
+        let p=PR[pid]||null; if(!p) try{ p=window.TM_APP&&TM_APP.status?TM_APP.status(pid).p:null; }catch(e){}
+        const rem=push==null?'<span class="mu">…</span>':push===false?'<span class="mu">?</span>':push[pid]?'<span class="ok">✓ כן</span>':'<span class="no">✗ לא</span>';
+        const home=!p||p.sa==null?'<span class="mu">לא ידוע</span>':p.sa?'<span class="ok">✓ כן</span>':(p.os==='ios'?'<span class="no">✗ לא</span>':'<span class="mu">לא</span>');
+        return '<div class="r"><b>'+E(nm(pid))+'</b><span>'+rem+'</span><span>'+home+'</span><span>'+E(p&&p.at?ago(p.at):'—')+'</span></div>';
+      }).join('');
+      c.innerHTML='<h3>📱 הטלפונים של הבנות</h3><div class="r h"><span></span><span>🔔 תזכורות</span><span>📲 מסך הבית</span><span>🕐 נכנסה</span></div>'+rows+
+        '<div class="note">תזכורות כבויות? בטלפון שלה לוחצים על "🔔 להפעיל תזכורות" בראש המסך. באייפון צריך קודם להוסיף למסך הבית.</div>';
+    };
+    paint(null);
+    (async()=>{
+      const push={};
+      try{ if(!DB){ paint(false); return; } const [s,pr]=await Promise.all([DB.collection('push').get(),DB.collection('presence').get().catch(()=>null)]);
+        s.docs.forEach(d=>{ const b=d.data()||{}; if(b.who) push[b.who]=true; });
+        if(pr) pr.docs.forEach(d=>{ const b=d.data()||{}; if(b.pid) PR[b.pid]=b; });
+        paint(push); }
+      catch(e){ paint(false); }
+    })();
+    return c;
+  }
+  let health=0;
+  async function addHealth(){
+    const top=document.querySelector('#parentBox .dash-top'); if(!top||$('dHealth')) return;
+    const box=document.createElement('div'); box.id='dHealth';
+    const after=$('dThree')||top; after.after(box);
+    box.appendChild(await phoneCard()); box.appendChild(await errCard());
+  }
+  if(typeof showDash==='function'){
+    const _sd=showDash;
+    showDash=async function(){
+      const p=_sd.apply(this,arguments);
+      setTimeout(addHealth,60); const bx=$('parentBox');
+      if(bx){ let t=null; const mo=new MutationObserver(()=>{ clearTimeout(t); t=setTimeout(addHealth,80); }); mo.observe(bx,{childList:true}); setTimeout(()=>mo.disconnect(),30000); }
+      return p;
+    };
+  }
+
+  /* ---------- 8 · 🎉 חגיגה בסוף סבב: 16 תשובות נכונות ומעלה ---------- */
+  function celebrate(ok,n,pid){
+    pid=pid||curPid(); if(!pid) return;
+    let o=$('tmCel'); if(o) o.remove();
+    o=document.createElement('div'); o.id='tmCel'; o.setAttribute('aria-hidden','true');
+    const cs=['#F2B134','#17794D','#1F55B8','#B8235A','#0B6F6B','#FF7A45'];
+    let conf=''; for(let i=0;i<70;i++) conf+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;background:'+cs[i%cs.length]+';animation-duration:'+(1.6+Math.random()*1.8).toFixed(2)+'s;animation-delay:'+(Math.random()*.6).toFixed(2)+'s"></i>';
+    const champ=pid==='dad'?'אלוף':'אלופה';
+    o.innerHTML=conf+'<div class="msg">🎉 '+ok+(n?' מתוך '+n:'')+'! '+champ+'!</div><img src="img/'+pid+'-full.webp" alt="">';
+    document.body.appendChild(o);
+    const img=o.querySelector('img'); img.onerror=()=>img.remove();
+    setTimeout(()=>{ o.style.transition='opacity .4s'; o.style.opacity='0'; setTimeout(()=>o.remove(),450); },3600);
+  }
+  window.TM_CELEB=celebrate;
+  function scoreOf(el){
+    const big=el.querySelector('.m-big'), h=el.querySelector('h3');
+    const t=((big&&/\//.test(big.textContent)?big.textContent:'')+' '+(h?h.textContent:'')+' '+el.textContent).replace(/\s+/g,' ');
+    let m=/(\d+)\s*\/\s*(\d+)/.exec(big?big.textContent:'')||/(\d+)\s*מתוך\s*(\d+)/.exec(t);
+    return m?{ok:+m[1],n:+m[2]}:null;
+  }
+  let celT=0;
+  function celScan(){
+    celT=0;
+    document.querySelectorAll('.tx-end,.m-res').forEach(el=>{
+      if(el.dataset.tmCel||el.offsetParent===null) return; el.dataset.tmCel='1';
+      if(el.closest('#tmMorn')) return;
+      const s=scoreOf(el); if(s&&s.n>=s.ok&&s.ok>=16) celebrate(s.ok,s.n);
+    });
+  }
+  new MutationObserver(()=>{ if(!celT) celT=setTimeout(celScan,250); }).observe(document.body,{childList:true,subtree:true});
+  /* לוח הכפל של אביב (בתוך חלון נפרד): 16 ומעלה נכונות בפעם הראשונה */
+  addEventListener('message',e=>{ const d=e&&e.data; if(d&&d.tm==='kefelDone'&&+d.first>=16) celebrate(+d.first,20,d.pid||curPid()); });
+
+  /* ---------- 5 · 🪐 סדרי את כוכבי הלכת (מיכל) — לבחינה שיש בה את 8 כוכבי הלכת ---------- */
+  const PL=[
+    {n:'כוכב חמה',w:'חתול',c:'#A39A92',z:16},
+    {n:'נוגה',w:'נמר',c:'#E8BE6E',z:22},
+    {n:'כדור הארץ',w:'כחול',c:'#2F7FD8',z:23,ring:'#3E9E4F'},
+    {n:'מאדים',w:'מצא',c:'#D0583E',z:19},
+    {n:'צדק',w:'צדף',c:'#D9A066',z:36,stripe:1},
+    {n:'שבתאי',w:'שמח',c:'#E6C77A',z:32,saturn:1},
+    {n:'אורנוס',w:'אמר',c:'#7FD3E0',z:27},
+    {n:'נפטון',w:'נהדר',c:'#3F5FD6',z:26}
+  ];
+  const TRICK='חתול נמר כחול מצא צדף שמח, אמר: נהדר! 🐱';
+  function ball(p,sz){
+    sz=sz||p.z;
+    let st='width:'+sz+'px;height:'+sz+'px;background:'+p.c+';';
+    if(p.stripe) st+='background:repeating-linear-gradient(0deg,#D9A066 0 4px,#B9824D 4px 7px);';
+    if(p.ring) st+='box-shadow:inset -'+Math.round(sz/4)+'px -'+Math.round(sz/6)+'px 0 '+p.ring+';';
+    if(p.saturn) st+='box-shadow:0 0 0 2px #0E1630,0 0 0 4px #CDB46A;';
+    return '<span class="pb" style="'+st+'"></span>';
+  }
+  function hasPlanets(exId){
+    try{
+      const pid=curPid(); if(!pid||!window.TM_UP||!TM_UP.ready) return false;
+      return TM_UP.ready(pid,exId).some(r=>(r.mat.topics||[]).some(t=>/כוכב חמה/.test(t.ex||'')&&/נפטון/.test(t.ex||'')&&/צדק/.test(t.ex||'')));
+    }catch(e){ return false; }
+  }
+  const G={i:0,bad:0,t0:0,ex:''};
+  function plOpen(exId){
+    G.ex=exId||'';
+    let o=$('tmPl'); if(!o){ o=document.createElement('div'); o.id='tmPl'; o.setAttribute('role','dialog'); o.setAttribute('aria-label','לסדר את כוכבי הלכת'); document.body.appendChild(o); }
+    o.classList.add('show'); plStart();
+  }
+  function plClose(){ const o=$('tmPl'); if(o) o.classList.remove('show'); }
+  function plStart(){
+    const o=$('tmPl'); G.i=0; G.bad=0; G.t0=Date.now();
+    const order=PL.map((p,k)=>k); for(let i=order.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+    o.innerHTML='<div class="pl-top"><button type="button" class="pl-x" aria-label="סגירה">✕</button><h2>🪐 לסדר את כוכבי הלכת</h2></div>'+
+      '<div class="pl-ins">לוחצים לפי הסדר מהשמש</div>'+
+      '<div class="pl-sun"><span>☀️</span>השמש</div>'+
+      '<div class="pl-track">'+PL.map((p,k)=>(k===4?'<div class="pl-belt" id="plBelt">🪨 חגורת האסטרואידים 🪨</div>':'')+'<div class="pl-s'+(k===0?' next':'')+'" data-k="'+k+'"><span class="n">'+(k+1)+'</span><span class="v"></span></div>').join('')+'</div>'+
+      '<div class="pl-hint" id="plHint"></div>'+
+      '<div class="pl-bank">'+order.map(k=>'<button type="button" class="pl-c" data-k="'+k+'">'+ball(PL[k],Math.min(PL[k].z,30))+'<span>'+E(PL[k].n)+'</span></button>').join('')+'</div>';
+    o.querySelector('.pl-x').onclick=plClose;
+    o.querySelectorAll('.pl-c').forEach(b=>b.onclick=()=>plTap(b));
+  }
+  function plTap(b){
+    const o=$('tmPl'), k=+b.dataset.k;
+    if(b.classList.contains('used')) return;
+    if(k===G.i){
+      b.classList.add('used');
+      const s=o.querySelector('.pl-s[data-k="'+k+'"]'); s.classList.remove('next'); s.classList.add('on');
+      s.querySelector('.v').innerHTML=ball(PL[k],Math.min(PL[k].z,28))+' '+E(PL[k].n);
+      G.i++; $('plHint').textContent='';
+      if(G.i===4){ const bl=$('plBelt'); if(bl) bl.classList.add('on'); }
+      const nx=o.querySelector('.pl-s[data-k="'+G.i+'"]'); if(nx) nx.classList.add('next');
+      if(G.i===PL.length) setTimeout(plEnd,350);
+    } else {
+      G.bad++; b.classList.remove('bad'); void b.offsetWidth; b.classList.add('bad'); setTimeout(()=>b.classList.remove('bad'),700);
+      const p=PL[G.i];
+      $('plHint').innerHTML='כמעט! מספר '+(G.i+1)+' בטריק: <b>'+E(p.w)+'</b> → מתחיל ב-<b>'+E(p.n[0])+'</b>';
+    }
+  }
+  function plEnd(){
+    const o=$('tmPl'), sec=Math.round((Date.now()-G.t0)/1000), pid=curPid()||'x', K='tm_pl_best_'+pid;
+    let best=+(localStorage.getItem(K)||0); const rec=G.bad===0&&(!best||sec<best);
+    if(rec){ best=sec; try{ localStorage.setItem(K,String(sec)); }catch(e){} }
+    o.innerHTML='<div class="pl-top"><button type="button" class="pl-x" aria-label="סגירה">✕</button><h2>🪐 לסדר את כוכבי הלכת</h2></div>'+
+      '<div class="pl-end"><div class="big">'+(G.bad?'💪':'🏆')+'</div><h3>'+(G.bad?'סידרת את כולם!':'בלי אף טעות!')+'</h3>'+
+      '<div>⏱️ '+sec+' שניות'+(G.bad?' · טעויות: '+G.bad:'')+(rec?' · 🏆 שיא חדש!':best?' · השיא שלך: '+best+' שניות':'')+'</div>'+
+      '<div class="tr">🧠 הטריק:<br><b>'+E(TRICK)+'</b><div class="mp">'+PL.map((p,k)=>'<span>'+(k+1)+'. '+E(p.w)+' ← '+E(p.n)+'</span>').join('')+'</div></div>'+
+      '<button type="button" class="pl-again">🔁 עוד פעם</button><button type="button" class="pl-close">סגירה</button></div>';
+    o.querySelector('.pl-x').onclick=plClose; o.querySelector('.pl-close').onclick=plClose; o.querySelector('.pl-again').onclick=plStart;
+    if(!G.bad) celebrate(8,8);
+  }
+  window.TM_PLANETS={open:plOpen,close:plClose};
+  /* הכפתור — במסך החומר של הבחינה, מתחת למפת הזיכרון */
+  setInterval(()=>{
+    const box=$('txIn'); if(!box||!$('upAll')||box.querySelector('[data-tmpl]')) return;
+    let ex=null; try{ ex=CUR_EXAM; }catch(e){} if(!ex||!hasPlanets(ex.id)) return;
+    const anchor=box.querySelector('[data-upsk]')||null, card=$('upAll').closest('.tx-card'); if(!card) return;
+    const btn=document.createElement('button'); btn.type='button'; btn.className='mm-btn'; btn.dataset.tmpl=ex.id;
+    btn.innerHTML='<span class="mm-ic">🪐</span><span><b>לסדר את כוכבי הלכת</b><small>משחק קצר · מהשמש והלאה</small></span>';
+    btn.onclick=()=>plOpen(ex.id);
+    if(anchor) anchor.after(btn); else card.after(btn);
+  },700);
+  /* חזרה אחורה בטלפון (כפתור/מחווה) סוגרת את המשחק */
+  addEventListener('popstate',()=>{ const o=$('tmPl'); if(o&&o.classList.contains('show')) plClose(); });
+})();
+</script>
+
 </body></html>
