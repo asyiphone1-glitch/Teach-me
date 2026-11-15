@@ -11486,6 +11486,27 @@ html.tm-locked .nv-par,html.tm-locked #parentBtn2,html.tm-locked #gateParent{dis
   const go=st.querySelector('#tmStGo'); if(go) go.onclick=enter;
   window.tmShowStart=show;
   show();
+
+  /* 15.11.2026: טלפון של אבא/אמא (לא נעול) — כשחוזרים לאפליקציה תמיד מתחילים במסך הבית, לא אצל הילדה האחרונה.
+     באייפון האפליקציה רק "ממשיכה" מהרקע, ולכן מחזירים למסך הבית אחרי דקה ברקע (קפיצה קצרה לוואטסאפ לא מפריעה). */
+  function goHome(){
+    if(lock()) return;
+    try{ window.tmSwitchKid&&window.tmSwitchKid(); }catch(e){}
+    document.querySelectorAll('[id$="Ov"].show, .tx-ov.show, .ov.show').forEach(o=>{
+      o.querySelectorAll('iframe').forEach(f=>{ try{ f.src='about:blank'; }catch(e){} });
+      o.classList.remove('show');
+    });
+    document.body.style.overflow=''; document.body.classList.remove('focus');
+    try{ document.title='teach-me'; }catch(e){}
+    if(!open) show();
+    window.scrollTo(0,0);
+  }
+  let away=0;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){ away=Date.now(); return; }
+    if(away&&Date.now()-away>=60*1000) goHome(); away=0;
+  });
+  addEventListener('pageshow',e=>{ if(e.persisted) goHome(); });
 })();
 </script>
 </body></html>
@@ -12761,7 +12782,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611151020';
+  const TM_BUILD='202611151030';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
