@@ -12761,7 +12761,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611142300';
+  const TM_BUILD='202611151020';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -13738,7 +13738,16 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
     if(e.type!=='click') return;
     const id=a.dataset.id; if(!id) return;
     if(isEnded(id)){ delete ENDED[id]; save(); endPush(id,0); }
-    else { ENDED[id]=TK(); save(); endPush(id,ENDED[id]); }
+    else {
+      /* 15.11.2026 (אושר): בחינה שהתאריך שלה עוד לא הגיע — שואלים לפני שמסמנים "הסתיימה" */
+      let dl=null; try{ dl=daysLeft(id); }catch(e){}
+      if(dl!=null&&dl>0){
+        const v=(DATES[id]||'').split('-'); const S=SUBJ[((Object.values(EXAMS).flat().find(x=>x&&x.id===id))||{}).subj]||{};
+        const nm=S.n?S.i+' '+S.n+' — ':'';
+        if(!window.confirm(nm+'הבחינה ב-'+(+v[2])+'.'+(+v[1])+' עוד לא הייתה.\nבטוח שהיא נגמרה?')) return;
+      }
+      ENDED[id]=TK(); save(); endPush(id,ENDED[id]);
+    }
     redraw();
   }
   /* שלב capture — כדי שהלחיצה לא תפתח את הפרופיל של הילדה */
