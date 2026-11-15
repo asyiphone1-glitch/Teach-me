@@ -548,7 +548,7 @@
       }
 
       /* ---------- מקום 3 ---------- */
-      if(R[2]&&chOf(R[2])){
+      if(R[2]&&chOf(R[2])&&(R[2].n||0)>0){
         const r=R[2], ch=chOf(r), P=W3.pod[3];
         music('tense',.8); camWide(1.3); txt('T','3rd place');
         await S('And now... third place!');
@@ -569,7 +569,7 @@
       }
 
       /* ---------- מקום 2: קופסת מתנה ---------- */
-      if(R[1]&&chOf(R[1])){
+      if(R[1]&&chOf(R[1])&&(R[1].n||0)>0){
         const r=R[1], ch=chOf(r), P=W3.pod[2];
         const box=giftBox(); box.position.set(POD[2].x,P.top,0); box.scale.setScalar(.01); scene.add(box);
         music('tense',.85); camWide(1.3); txt('T','2nd place');
@@ -594,7 +594,7 @@
       }
 
       /* ---------- מקום 1: בלונים מהשמיים ---------- */
-      if(R[0]&&chOf(R[0])){
+      if(R[0]&&chOf(R[0])&&(R[0].n||0)>0){
         const r=R[0], ch=chOf(r), P=W3.pod[1];
         music('tense',1); camWide(1.2); W3.dimTo=.85; txt('T','1st place');
         await S('And now... the moment we were all waiting for!');

@@ -7567,6 +7567,22 @@ showHub=(function(prev){ return function(){
   const ov=document.getElementById('rmOv'), box=document.getElementById('rmBox');
   let open=false, queue=[];
 
+  /* 15.11.2026 (אושר): בטלפון של הורים — מסך הבית או מסך הפתיחה = בלי חלון תזכורת של ילדה */
+  function homeUp(){
+    if(typeof PROFILE==='undefined'||!PROFILE) return true;
+    const gate=document.getElementById('gate'), st=document.getElementById('tmStart');
+    return !!((gate&&!gate.classList.contains('hide'))||(st&&st.classList.contains('show')));
+  }
+  function lockId(){ let lk=null; try{ lk=localStorage.getItem('tm_lock'); }catch(e){} if(!lk&&window.TM_LOCK) lk=window.TM_LOCK; return lk&&KIDS.indexOf(lk)>=0?lk:null; }
+  /* חלון שנסגר מבחוץ (חזרה אוטומטית למסך הבית) או שכבר לא שייך למסך — סוגרים בלי לסמן "נראה", כדי שיופיע שוב אצל הילדה */
+  function tidy(){
+    if(open&&!ov.classList.contains('show')){ open=false; delete ov.dataset.p; return; }
+    if(!open||lockId()) return;
+    if(homeUp()||(ov.dataset.p&&PROFILE&&ov.dataset.p!==PROFILE.id)){
+      try{ speechSynthesis.cancel(); }catch(e){}
+      ov.classList.remove('show'); open=false; delete ov.dataset.p; queue=[];
+    }
+  }
   function stageOf(d){
     if(d===2) return 'd2';
     if(d===1) return 'd1';
@@ -7581,12 +7597,12 @@ showHub=(function(prev){ return function(){
     let lk=null; try{ lk=localStorage.getItem('tm_lock'); }catch(e){}
     if(!lk&&window.TM_LOCK) lk=window.TM_LOCK;
     if(lk&&KIDS.indexOf(lk)<0) lk=null;
-    const gate=document.getElementById('gate');
-    const onGate=!PROFILE||(gate&&!gate.classList.contains('hide'));
-    const kids=lk?[lk]:(onGate?[]:[PROFILE.id]);
+    const kids=lk?[lk]:(homeUp()?[]:[PROFILE.id]);
     const out=[];
     kids.forEach(pid=>{
-      (EXAMS[pid]||[]).filter(x=>!isArch(x)&&x.type!=='kesher').forEach(ex=>{
+      /* 15.11.2026 (אושר): בחינה שסומנה ⚪ "הסתיימה" — בלי תזכורת קופצת */
+      let END={}; try{ END=JSON.parse(localStorage.getItem('tm_ended')||'{}')||{}; }catch(e){}
+      (EXAMS[pid]||[]).filter(x=>!isArch(x)&&x.type!=='kesher'&&!END[x.id]).forEach(ex=>{
         const st=stageOf(daysLeft(ex.id)); if(!st) return;
         const o={pid,ex,st}; if(!lsGet(keyOf(o))) out.push(o);
       });
@@ -7666,8 +7682,8 @@ showHub=(function(prev){ return function(){
     if(t.conf) confetti();
     try{ if(typeof playCorrectSound==='function') playCorrectSound(); }catch(e){}
   }
-  function next(){ if(open) return; if(!queue.length) queue=due(); const o=queue.shift(); if(o) show(o); }
-  function check(){ if(open) return; queue=due(); next(); }
+  function next(){ tidy(); if(open) return; if(!queue.length) queue=due(); const o=queue.shift(); if(o) show(o); }
+  function check(){ tidy(); if(open) return; queue=due(); next(); }
   window.tmReminders=check;
 
   /* בודקים: כשהאפליקציה נפתחת, כשחוזרים אליה, כשמחליפים ילדה, וכל חצי דקה */
@@ -7676,6 +7692,10 @@ showHub=(function(prev){ return function(){
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) setTimeout(check,600); });
   const _rg=refreshGate; refreshGate=async function(){ const r=await _rg.apply(this,arguments); check(); return r; };
   const _sp=setProfile; setProfile=function(){ const r=_sp.apply(this,arguments); setTimeout(check,400); return r; };
+  /* 15.11.2026: מעבר למסך הבית / מסך הפתיחה — בודקים מיד */
+  try{ const mo=new MutationObserver(()=>setTimeout(check,50));
+    const hook=()=>['gate','tmStart'].forEach(id=>{ const el=document.getElementById(id); if(el&&!el.dataset.rmObs){ el.dataset.rmObs='1'; mo.observe(el,{attributes:true,attributeFilter:['class']}); } });
+    hook(); document.addEventListener('DOMContentLoaded',hook); setTimeout(hook,1500); }catch(e){}
 })();
 </script>
 <style>
@@ -8086,8 +8106,9 @@ window.TM_LOOK={
     }).sort((a,b)=>b.n-a.n||b.ms-a.ms));
   }
   window.TM_WK={row:pid=>standings(weekStart(Date.now())).find(r=>r.pid===pid)};
-  function gIdx(L){ let g=0; L.forEach(r=>{ if(r) r.gi=(r.pid&&r.pid!=='dad')?g++:null; }); return L; }
-  function prizeOf(i,r){ if(!r||!r.pid||r.pid==='dad') return 0; const k=r.gi!=null?r.gi:i; return k<3&&(r.n||0)>=MIN_Q_FOR_PRIZE?PRIZE[k]:0; }
+  /* 15.11.2026 (אושר): מי שלא ענתה על אף שאלה לא מקבלת מקום, מדליה, פרס או הכרזה בטקס */
+  function gIdx(L){ let g=0; L.forEach(r=>{ if(r) r.gi=(r.pid&&r.pid!=='dad'&&(r.n||0)>0)?g++:null; }); return L; }
+  function prizeOf(i,r){ if(!r||!r.pid||r.pid==='dad'||!((r.n||0)>0)) return 0; const k=r.gi!=null?r.gi:i; return k<3&&(r.n||0)>=MIN_Q_FOR_PRIZE?PRIZE[k]:0; }
   function mTxt(ms){ return minTxt(ms); }
   async function loadEveryone(){ for(const pid of KIDS.concat('dad')){ try{ await loadAll(pid); }catch(e){} } }
   async function pubPull(){ if(!DB) return PUB; try{ const s=await DB.doc('meta/weekWinners').get(); if(s.exists) PUB=s.data()||null; }catch(e){} return PUB; }
@@ -8121,7 +8142,7 @@ window.TM_LOOK={
     b=b||document.getElementById('wkHubBtn'); if(!b||!PROFILE) return;
     const st=standings(weekStart(Date.now())), i=st.findIndex(r=>r.pid===PROFILE.id), r=st[i]; if(!r) return;
     const lead=i===0&&r.n>0;
-    b.innerHTML='<span>'+(lead?'🥇 את מובילה בתחרות השבוע!':'🏆 תחרות השבוע: את במקום '+(i+1))+' · ענית על '+qTxt(r.n)+'</span><span aria-hidden="true">←</span>';
+    b.innerHTML='<span>'+(lead?'🥇 את מובילה בתחרות השבוע!':(r.n>0?'🏆 תחרות השבוע: את במקום '+(i+1):'🏆 תחרות השבוע: עוד לא ענית השבוע'))+(r.n>0?' · ענית על '+qTxt(r.n):'')+'</span><span aria-hidden="true">←</span>';
   }
   /* עדכון חי: כל תשובה מכל טלפון מחובר מזיזה את הטבלה מיד */
   window.addEventListener('tm-live',()=>{
@@ -8147,10 +8168,10 @@ window.TM_LOOK={
     wb.innerHTML='<h2>🏆 מי עונה על הכי הרבה שאלות?</h2><p class="wk-sub">מ-'+wkRange(ws)+(isThis?' · '+leftTxt():' · הסתיים')+'</p>'+
       (BP?'<div class="wk-tabs"><button type="button" data-w="this" class="'+(isThis?'on':'')+'">השבוע</button><button type="button" data-w="last" class="'+(isThis?'':'on')+'">שבוע שעבר</button></div>':'')+
       '<div class="wk-pod">'+pod.map((r,k)=>{ const i=pl[k], P=PROFILES[r.pid], pz=prizeOf(i,r);
-        return '<div class="wk-col '+cls[k]+'">'+(i===0?'<div class="trophy" aria-hidden="true">🏆</div>':'')+'<div class="em">'+P.emoji+'</div><div class="nm">'+esc(P.name)+'</div><div class="tm">✏️ '+qTxt(r.n)+'</div>'+
-          '<div class="wk-blk"><b>'+(i+1)+'</b>'+(pz?'<span class="pz">'+pz+' ₪</span>':'')+'</div></div>'; }).join('')+'</div>'+
+        const nz=(r.n||0)>0; return '<div class="wk-col '+cls[k]+'">'+(i===0&&nz?'<div class="trophy" aria-hidden="true">🏆</div>':'')+'<div class="em">'+P.emoji+'</div><div class="nm">'+esc(P.name)+'</div><div class="tm">✏️ '+qTxt(r.n)+'</div>'+
+          '<div class="wk-blk"><b>'+(nz?(i+1):'–')+'</b>'+(pz?'<span class="pz">'+pz+' ₪</span>':'')+'</div></div>'; }).join('')+'</div>'+
       '<div class="wk-rows">'+st.map((r,i)=>{ const P=PROFILES[r.pid], pz=prizeOf(i,r);
-        return '<div class="wk-row"><span class="r">'+(RNK[i]||String(i+1))+'</span><span class="n">'+P.emoji+' '+esc(P.name)+'<small>'+r.days+' ימי לימוד · ⏱ '+mTxt(r.ms)+'</small></span><span class="t">✏️ '+r.n+'</span><span class="p'+(pz?'':' z')+'">'+(pz?pz+' ₪':(r.pid==='dad'?'🧢':i<3?'—':'💪'))+'</span></div>'; }).join('')+'</div>'+
+        return '<div class="wk-row"><span class="r">'+((r.n||0)>0?(RNK[i]||String(i+1)):'·')+'</span><span class="n">'+P.emoji+' '+esc(P.name)+'<small>'+r.days+' ימי לימוד · ⏱ '+mTxt(r.ms)+'</small></span><span class="t">✏️ '+r.n+'</span><span class="p'+(pz?'':' z')+'">'+(pz?pz+' ₪':(r.pid==='dad'?'🧢':i<3?'—':'💪'))+'</span></div>'; }).join('')+'</div>'+
       (state==='load'?'<p class="wk-note">טוען את התשובות מכל הטלפונים…</p>':'<p class="wk-note">🟢 מתעדכן לבד ברגע שמישהי עונה</p>')+
       (BP?'<p class="wk-note">סופרים כמה שאלות כל ילדה ענתה השבוע (מיום ראשון עד שישי ב-11:00) (מכל המשחקים, כולל הכתבה). הזמן מופיע רק לידיעה. בתיקו — מי שלמדה יותר זמן. פרס רק למי שענתה על 10 שאלות לפחות. רק הבנות בתחרות — אבא לא משתתף.</p>'
          :'<p class="wk-note">כל שאלה שאת עונה = נקודה בתחרות ✏️ סופרים עד יום שישי ב-11:00: מקום ראשון 20 ₪, שני 15 ₪, שלישי 10 ₪ 🎁 גם אבא משחק — אבל הפרסים רק לבנות.</p>')+
@@ -8676,7 +8697,7 @@ window.TM_LOOK={
   /* ---------- הסצנות ---------- */
   let SC=[], TALKER=null;
   function buildScenes(){
-    const R=D.rows, has=i=>R[i]&&R[i].pid, tot=R.reduce((s,r)=>s+(r.n||0),0), pz=i=>prizeOf(i,R[i]);
+    const R=D.rows, has=i=>R[i]&&R[i].pid&&(R[i].n||0)>0, tot=R.reduce((s,r)=>s+(r.n||0),0), pz=i=>prizeOf(i,R[i]);
     const prizeSay=i=>pz(i)?' You won '+pz(i)+' shekels! 💰':'';
     const S=[];
     S.push({k:'open',d:6.2,say:[[.3,'Tap tap... is this on? 🎤'],[1.4,'Oops! My wing hit the mic! 🙈'],[3,'Welcome to the Winners Show! 🏆']],
@@ -10596,7 +10617,8 @@ const AV_WEEKS=[
   let busy=false, lastLoad=0;
   async function loadAll(force){
     const T=A(); if(!T||busy) return;
-    if(!force&&Date.now()-lastLoad<45000) return;
+    /* 15.11.2026 (אושר, חיסכון במכסה): במסך הבית קוראים מהענן פעם ב-5 דקות (לא כל דקה). כניסה ללוח ההורים — מיד. */
+    if(!force&&Date.now()-lastLoad<300000) return;
     busy=true;
     try{ for(const pid of IDS){ try{ await T.appDays(pid); }catch(e){} } lastLoad=Date.now(); }
     finally{ busy=false; }
@@ -12782,7 +12804,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611151035';
+  const TM_BUILD='202611151700';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };

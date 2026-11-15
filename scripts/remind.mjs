@@ -54,12 +54,14 @@ const mode=process.env.MODE||(hour<12?'morning':'evening');
 const dates=((await getDoc('meta/examDates'))||{}).dates||{};
 const arch=((await getDoc('meta/archived'))||{}).arch||{};
 const names=((await getDoc('meta/examNames'))||{}).map||{};
+/* 15.11.2026 (אושר): בחינה שסומנה ⚪ "הסתיימה" במסך הבית (meta/ended) — בלי תזכורות, גם אם התאריך שלה עוד לא הגיע */
+const ended=((await getDoc('meta/ended'))||{}).ended||{};
 const subs=(await listCol('push')).filter(s=>s.v&&s.v.sub&&s.v.sub.endpoint);
 console.log('day',day,'mode',mode,'exams',Object.keys(dates).length,'subs',subs.length);
 
 const msgs=[]; // {pid, title, body}
 for(const [id,d] of Object.entries(dates)){
-  if(!d||arch[id]===1) continue;
+  if(!d||arch[id]===1||ended[id]) continue;
   const info=names[id]||{}; const pid=info.pid||id.replace(/^up-/,'').split('-')[0];
   if(!NM[pid]) continue;
   const parts=id.replace(/^up-/,'').split('-'); const sn=info.n||SUBJ[parts[1]]||SUBJ[(parts[1]||'').replace(/\d+$/,'')]||'';
