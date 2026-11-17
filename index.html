@@ -12504,7 +12504,8 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
     box.insertAdjacentHTML('beforeend',
       '<div class="tx-card"><p class="tx-big" style="margin-bottom:6px">'+esc(B.length===1?B[0].mat.title:(ex&&ex.title)||B[0].mat.title)+'</p>'+
       '<p class="tx-note">'+T.length+' נושאים · '+nq+' שאלות · לחצי על נושא 👇</p>'+
-      '<button type="button" class="tx-next" id="upAll" style="margin-top:4px">✏️ לתרגל הכול ('+Math.min(20,nq)+' שאלות)</button></div>'+
+      '<button type="button" class="tx-next" id="upAll" style="margin-top:4px">✏️ לתרגל הכול ('+Math.min(20,nq)+' שאלות)</button>'+
+      (duelSis(pid,ex)&&nq>=10?'<button type="button" class="tx-next sec" id="upDuel">⚔️ דו־קרב עם '+esc(TWIN_N[duelSis(pid,ex)])+'</button>':'')+'</div>'+
       '<div class="tx-card">'+T.map((x,i)=>
         '<details class="up-tp"><summary><span>'+(i+1)+'.</span><span>'+esc(x.t.t)+'</span><span class="c">'+(x.t.q.length+x.t.tf.length)+' שאלות</span></summary><div class="bd">'+
         '<div>'+esc(x.t.ex).replace(/\n/g,'<br>')+'</div>'+(x.t.tip?'<div class="tip">🧠 '+esc(x.t.tip)+'</div>':'')+
@@ -12515,12 +12516,57 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
       '<button type="button" class="tx-next sec" id="upMore">📸 להוסיף עוד חומר</button></div>');
     const backHere=()=>openMat(pid,exId,back);
     $('upAll').onclick=()=>practice(pid,exId,null,backHere);
+    if($('upDuel')) $('upDuel').onclick=()=>duel(pid,exId,backHere);
     box.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>practice(pid,exId,T[+b.dataset.pr],backHere));
     box.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>{ const t=T[+b.dataset.say].t; say(t.t+'. '+t.ex+(t.tip?'. טריק לזכור: '+t.tip:'')); });
     box.querySelectorAll('.up-tp').forEach(d=>d.addEventListener('toggle',()=>{ if(!d.open) stopSay(); }));
     $('upMore').onclick=()=>{ openUp(); W.exam=exId; };
     $('upPh').onclick=async()=>{ const P=$('upPhs'); P.innerHTML='<p class="tx-note" style="text-align:center;margin-top:8px">⏳ טוענת…</p>'; const I=[]; for(const r of B){ (await loadImgs(r)).forEach(u=>I.push(u)); }
       P.innerHTML=I.length?'<div class="up-pimgs">'+I.map(u=>'<img src="'+u+'" alt="דף">').join('')+'</div>':'<p class="tx-note" style="text-align:center;margin-top:8px">הצילומים לא נשמרו בענן.</p>'; };
+  }
+
+  /* ---------- ⚔️ דו־קרב רוני והילי (18.11.2026, רון): בחינה ששתיהן לומדות, מעבירות את הטלפון, 10 שאלות (5 לכל אחת). לא נספר בציונים. ---------- */
+  const TWIN={roni:'hili',hili:'roni'}, TWIN_N={roni:'רוני',hili:'הילי'};
+  function duelSis(pid,ex){
+    const o=TWIN[pid]; if(!o||!ex||ex.type!=='up') return null;
+    try{ const x=(EXAMS[o]||[]).find(y=>y.type==='up'&&y.subj===ex.subj&&!isArch(y)&&readyFor(o,y.id).length);
+      if(!x) return null; const n=(typeof daysLeft==='function')?daysLeft(x.id):null; return (n==null||n>=0)?o:null; }catch(e){ return null; }
+  }
+  function duel(pid,exId,back){
+    const o=TWIN[pid]; if(!o) return;
+    const Q=shuf(poolOf(pid,exId,null)).slice(0,10).map(x=>({q:x.c.q,c:x.c.c,opts:x.opts.slice(),why:x.c.why}));
+    if(Q.length<10) return;
+    const P=[pid,o], sc={[pid]:0,[o]:0}; let i=0;
+    const box=shell('⚔️ דו־קרב',back);
+    const card=h=>{ box.innerHTML=SM().bar('⚔️ דו־קרב'); SM().wireBar(back); box.insertAdjacentHTML('beforeend',h); };
+    const scH=()=>'<div class="tm-duel-sc"><span'+(i%2===0?' class="on"':'')+'>'+TWIN_N[pid]+' <b>'+sc[pid]+'</b></span><span'+(i%2===1?' class="on"':'')+'>'+TWIN_N[o]+' <b>'+sc[o]+'</b></span></div>';
+    function pass(){
+      if(i>=Q.length) return end();
+      const who=P[i%2];
+      card('<div class="tx-card tm-duel">'+scH()+'<div class="e">📱</div><h3>התור של '+TWIN_N[who]+'!</h3><p class="tx-note">שאלה '+(i+1)+' מתוך 10</p><button type="button" class="tx-next" id="dGo">אני מוכנה 👍</button></div>');
+      $('dGo').onclick=ask;
+    }
+    function ask(){
+      const who=P[i%2], q=Q[i];
+      card('<div class="tx-card tm-duel">'+scH()+'<span class="tx-tag">'+TWIN_N[who]+' עונה</span><p class="tx-big">'+esc(q.q)+'</p><div class="tx-opts">'+
+        q.opts.map((t,k)=>'<button type="button" class="tx-opt" data-k="'+k+'">'+esc(t)+'</button>').join('')+'</div><div id="dFb"></div></div>');
+      box.querySelectorAll('.tx-opt').forEach(b=>b.onclick=()=>{
+        const ok=q.opts[+b.dataset.k]===q.c; if(ok) sc[who]++;
+        box.querySelectorAll('.tx-opt').forEach(x=>{ x.disabled=true; if(q.opts[+x.dataset.k]===q.c) x.classList.add('ok'); });
+        if(!ok) b.classList.add('no');
+        $('dFb').innerHTML='<p class="tx-note" style="margin-top:10px">'+(ok?'✅ נכון!':'❌ התשובה: <b>'+esc(q.c)+'</b>')+(q.why&&!ok?'<br>'+esc(q.why):'')+'</p><button type="button" class="tx-next" id="dNx">'+(i+1<Q.length?'להעביר את הטלפון ←':'לתוצאות 🏁')+'</button>';
+        $('dNx').onclick=()=>{ i++; pass(); };
+      });
+    }
+    function end(){
+      const a=sc[pid], b=sc[o], tie=a===b, win=a>b?pid:o;
+      card('<div class="tx-card tm-duel"><div class="e">'+(tie?'🤝':'🏆')+'</div><h3>'+(tie?'תיקו! שתיכן אלופות':TWIN_N[win]+' ניצחה!')+'</h3>'+
+        '<p>'+TWIN_N[pid]+': '+a+' מתוך 5 · '+TWIN_N[o]+': '+b+' מתוך 5</p>'+
+        '<button type="button" class="tx-next" id="dAg">⚔️ עוד דו־קרב</button><button type="button" class="tx-next sec" id="dBk">📖 חזרה לחומר</button></div>');
+      try{ if(!tie||a>=4) mConfetti(); }catch(e){}
+      $('dAg').onclick=()=>duel(pid,exId,back); $('dBk').onclick=back;
+    }
+    pass();
   }
 
   /* תרגול: כל החומר (10 שאלות) או נושא אחד */
@@ -12547,6 +12593,17 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
       const due=shuf(C.list.filter(c=>c.ex===exId&&c.due<=now&&((c.box!=null&&c.box<3)||(c.box==null&&c.sp&&c.sp<3)))).slice(0,4)
         .map(c=>({c,rv:1,opts:S.optsFor(c,C.byTp)})).filter(x=>x.opts);
       if(due.length){ const ks=new Set(due.map(x=>x.c.key)); items=due.concat(items.filter(x=>!ks.has(x.c.key))).slice(0,items.length); }
+    }catch(e){}
+    /* 🔀 סבב מעורבב (18.11.2026, פרופ׳ אריאל): עד 3 שאלות ממה שכבר ידעה בימים קודמים, ובלי שתי שאלות מאותו נושא ברצף */
+    if(!one) try{ const C=SM().cards(pid), t0=new Date().setHours(0,0,0,0), have=new Set(items.map(x=>x.c.key));
+      const knew=new Set(C.list.filter(c=>c.ex===exId&&c.ok>0&&c.last<t0&&c.box==null).map(c=>c.key));
+      const inR=items.filter(x=>knew.has(x.c.key)).length;
+      const add=shuf(pool.filter(x=>knew.has(x.c.key)&&!have.has(x.c.key))).slice(0,Math.max(0,3-inR));
+      if(add.length){ const keep=items.filter(x=>x.rv||knew.has(x.c.key)); const rest=items.filter(x=>!x.rv&&!knew.has(x.c.key));
+        items=keep.concat(add,rest).slice(0,items.length); items=shuf(items); }
+      const tk=x=>x._tk||x.c.tp||'', out=[]; let rest=items.slice();
+      while(rest.length){ const last=out.length?tk(out[out.length-1]):null; let k=rest.findIndex(x=>tk(x)!==last); if(k<0) k=0; out.push(rest.splice(k,1)[0]); }
+      items=out;
     }catch(e){}
     /* דוגמה פתורה לפני השאלה הראשונה של כל נושא שיש לו דוגמה */
     const usedWe={};
@@ -12814,7 +12871,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611180030';
+  const TM_BUILD='202611180100';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -15463,6 +15520,22 @@ function __dadDelPatch(){
 #tmMorn p{margin:0 0 18px;color:var(--muted,#586079);}
 #tmMorn .go{display:block;width:100%;min-height:96px;border:none;border-radius:24px;background:#F2B134;color:#1C2233;font-family:'Heebo',sans-serif;font-weight:800;font-size:1.35rem;cursor:pointer;box-shadow:0 6px 0 #C98A12;}
 #tmMorn .go:active{transform:translateY(3px);box-shadow:0 3px 0 #C98A12;}
+#tmMorn .calm{display:block;width:100%;margin-top:12px;min-height:56px;border:2px solid #F2B134;border-radius:18px;background:transparent;color:inherit;font-family:'Heebo',sans-serif;font-weight:800;font-size:1.1rem;cursor:pointer;}
+.tm-duel{text-align:center;}
+.tm-duel .e{font-size:3rem;}
+.tm-duel-sc{display:flex;gap:8px;margin-bottom:12px;}
+.tm-duel-sc span{flex:1;padding:8px;border-radius:12px;background:rgba(127,127,127,.12);font-weight:700;}
+.tm-duel-sc span.on{background:#F2B134;color:#1C2233;}
+.tm-duel-sc b{font-size:1.2rem;}
+.tm-calm{text-align:center;}
+.tm-calm .e{font-size:3rem;}
+.tm-calm textarea{width:100%;box-sizing:border-box;border:2px solid var(--line,#D9DEEA);border-radius:14px;padding:12px;font:inherit;font-size:1.05rem;resize:none;background:transparent;color:inherit;transition:transform .4s,opacity .4s;}
+.tm-calm textarea.gone{transform:scale(.2) rotate(-8deg);opacity:0;}
+.tm-breath{position:relative;height:220px;display:flex;align-items:center;justify-content:center;}
+.tm-breath i{position:absolute;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,#9FD8F2,#4A9BD1);opacity:.55;animation:tmBr 8s ease-in-out infinite;}
+.tm-breath b{position:relative;font-size:1.35rem;}
+@keyframes tmBr{0%,100%{transform:scale(.45);}50%{transform:scale(1);}}
+@media (prefers-reduced-motion:reduce){.tm-breath i{animation-duration:16s;}}
 #tmMorn .skip{margin-top:22px;background:none;border:none;color:var(--muted,#586079);font:inherit;font-size:.9rem;text-decoration:underline;cursor:pointer;min-height:44px;}
 .tm-flg{position:absolute;top:8px;left:8px;width:36px;height:36px;min-height:0 !important;padding:0 !important;border-radius:50%;border:1px solid var(--line,#DFE3EE);background:var(--surface,#fff);color:var(--muted,#586079);font-size:1rem;line-height:1;cursor:pointer;opacity:.75;z-index:2;}
 .tm-flg-host{position:relative;}
@@ -15652,6 +15725,39 @@ function __dadDelPatch(){
     shuf(poolFor(pid,ex)).forEach(p=>{ if(out.length<10&&!seen.has(p.c.q)){ seen.add(p.c.q); out.push({c:p.c,rv:0,opts:null}); } });
     return out;
   }
+  /* ---------- 😮‍💨 לפרוק את הלחץ (18.11.2026, ד״ר נועה): 30 שניות נשימה + 2 דקות לכתוב מה מלחיץ. שום דבר לא נשמר. ---------- */
+  function calm(toReview){
+    const sm=S(); if(!sm.open) return;
+    sm.open(); const box=$('txIn'); let tm=null, left=30, inh=true;
+    const stop=()=>{ clearInterval(tm); tm=null; };
+    const exit=()=>{ stop(); sm.close(); };
+    function write(){
+      stop();
+      box.innerHTML=sm.bar('😮‍💨 להירגע')+'<div class="tx-card tm-calm"><h3>מה מלחיץ אותך?</h3><p class="tx-note">כתבי הכול. אף אחד לא יראה — זה נמחק מיד.</p>'+
+        '<textarea id="clTx" rows="6" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="אני דואגת ש…"></textarea>'+
+        '<button type="button" class="tx-next" id="clThrow">🗑️ לזרוק את הדאגה</button></div>';
+      sm.wireBar(exit);
+      $('clThrow').onclick=()=>{
+        const t=$('clTx'); t.value=''; t.classList.add('gone');
+        setTimeout(()=>{
+          box.innerHTML=sm.bar('😮‍💨 להירגע')+'<div class="tx-card tm-calm"><div class="e">💪</div><h3>יופי! הדאגה בחוץ.</h3><p>עכשיו הראש פנוי למבחן.</p>'+
+            ($('mnGo')?'<button type="button" class="tx-next" id="clRev">☀️ לחזרה אחרונה</button>':'')+
+            '<button type="button" class="tx-next sec" id="clDone">סיום</button></div>';
+          sm.wireBar(exit); $('clDone').onclick=exit;
+          if($('clRev')) $('clRev').onclick=toReview;
+        },450);
+      };
+    }
+    box.innerHTML=sm.bar('😮‍💨 להירגע')+'<div class="tx-card tm-calm"><div class="tm-breath"><i></i><b id="clWord">שואפות… 🌬️</b></div>'+
+      '<p class="tx-note"><span id="clLeft">30</span> שניות</p><button type="button" class="tx-next sec" id="clSkip">לדלג ←</button></div>';
+    sm.wireBar(exit); $('clSkip').onclick=write;
+    tm=setInterval(()=>{
+      left--; const L=$('clLeft'), W=$('clWord'); if(!L||!W){ stop(); return; }
+      L.textContent=left;
+      if(left%4===0){ inh=!inh; W.textContent=inh?'שואפות… 🌬️':'נושפות… 😮‍💨'; }
+      if(left<=0) write();
+    },1000);
+  }
   function morning(){
     const P=prof(), hb=$('hubBox'); if(!P||!hb||!hubOpen()) return;
     const ex=examToday(P.id), on=!!ex&&!lg(mornSkipK(P.id))&&new Date().getHours()<16;
@@ -15663,8 +15769,10 @@ function __dadDelPatch(){
       w.dataset.sig=sig;
       w.innerHTML='<div class="sun">☀️</div><h2>היום הבחינה ב'+E(subjName(ex))+'!</h2><p>בהצלחה '+E(P.name||'')+' 🍀</p>'+
         (items.length>=3?'<button type="button" class="go" id="mnGo">חזרה אחרונה<br><small style="font-size:1rem;font-weight:700">5 דקות · '+items.length+' דברים חשובים</small></button>':'')+
+        '<button type="button" class="calm" id="mnCalm">😮‍💨 להירגע דקה</button>'+
         '<button type="button" class="skip" id="mnSkip">למסך הרגיל</button>';
       $('mnSkip').onclick=()=>{ ls(mornSkipK(P.id),'1'); morning(); };
+      $('mnCalm').onclick=()=>calm(()=>{ const g=$('mnGo'); S().close(); if(g) g.click(); });
       if($('mnGo')) $('mnGo').onclick=()=>{
         try{ CUR_EXAM=ex; }catch(e){}
         S().run({title:'☀️ חזרה אחרונה',items:mornItems(P.id,ex),game:'morn',back:()=>S().close(),onEnd:r=>{
