@@ -25,6 +25,7 @@ jobs:
         run: |
           node scripts/check-syntax.mjs
           node --check scripts/remind.mjs
+          node --check scripts/news.mjs
       - name: התקנת דפדפן
         run: |
           npm install --no-save playwright@1.49.1
@@ -53,4 +54,8 @@ jobs:
   firebase:
     needs: promote
     uses: ./.github/workflows/deploy-firebase.yml
+    secrets: inherit
+  news:
+    needs: promote
+    uses: ./.github/workflows/news.yml
     secrets: inherit

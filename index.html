@@ -12814,7 +12814,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611162300';
+  const TM_BUILD='202611172330';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -16696,6 +16696,79 @@ html:has(#tmSj.show),html:has(#tmSj.show) body{overflow:hidden;}
         return r;
       };
     }
+  }catch(e){}
+})();
+</script>
+
+<script>
+/* ✍️ 17.11.2026 (אושר בישיבת צוות, מיכל): "כמו במבחן של המורה" — שאלה פתוחה אחת לכל מבחן.
+   בסוף סבב מלא (10+ שאלות) של בחינה מהעלאה (type 'up'), פעם ביום לכל בחינה.
+   השאלה: mat.open {q,a} אם נכתבה בחומר; אחרת שאלה אחת קבועה מהחומר (למה/איך/מה) הופכת לפתוחה.
+   הילדה כותבת או אומרת בקול ← רואה תשובה לדוגמה ← "צדקתי 👍" / "כמעט 🤏". לא נספר בציון. */
+(function(){
+  try{
+    const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const st=document.createElement('style');
+    st.textContent='.tm-oq{margin:12px 0;padding:14px;border-radius:16px;background:var(--card,#fff);border:2px dashed var(--acc,#1F55B8);text-align:right;color:var(--ink,#1C2233)}'+
+      '.tm-oq h4{margin:0 0 6px;font-size:1.05rem}.tm-oq .q,.m-res .tm-oq p.q{font-weight:700;margin:0 0 10px;line-height:1.5;color:var(--ink,#1C2233)}'+
+      '.tm-oq textarea{width:100%;box-sizing:border-box;min-height:70px;font:inherit;font-size:1rem;padding:10px;border-radius:12px;border:2px solid #C9CFDB;background:#fff;color:#1C2233;resize:vertical}'+
+      '.tm-oq .a{margin:10px 0;padding:10px 12px;border-radius:12px;background:#E9F1E7;color:#1C2233;line-height:1.5;white-space:pre-line}'+
+      '.tm-oq .bs{display:flex;gap:10px;margin-top:10px}.tm-oq button{flex:1;min-height:56px;font:inherit;font-weight:800;font-size:1.05rem;border-radius:14px;border:0;cursor:pointer;background:var(--acc,#1F55B8);color:#fff}'+
+      '.tm-oq button.al{background:#F2B134;color:#1C2233}.tm-oq .done{font-weight:800;margin-top:8px}';
+    document.head.appendChild(st);
+    const pidNow=()=>{ try{ return (typeof curPid==='function'&&curPid())||(PROFILE&&PROFILE.id)||''; }catch(e){ return ''; } };
+    const exNow=()=>{ try{ return (typeof CUR_EXAM!=='undefined'&&CUR_EXAM)||null; }catch(e){ return null; } };
+    const today=()=>{ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+    const g=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
+    const s=(k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
+    const hash=t=>{ let h=0; for(const c of String(t)) h=(h*31+c.charCodeAt(0))|0; return Math.abs(h); };
+    function openQ(pid,ex){
+      if(!window.TM_UP||!TM_UP.ready) return null;
+      const R=TM_UP.ready(pid,ex.id)||[]; if(!R.length) return null;
+      for(const r of R){ const o=r.mat&&r.mat.open; if(o&&o.q&&o.a) return {q:o.q,a:o.a}; }
+      /* בלי שאלה כתובה: הופכים שאלה אמריקאית לשאלה פתוחה — "למה/איך/מה" — והתשובה לדוגמה = התשובה הנכונה + ההסבר */
+      const C=[];
+      R.forEach(r=>(r.mat.topics||[]).forEach(t=>(t.q||[]).forEach(x=>{
+        if(!x||!x.q||!x.o||x.o[x.a]==null) return; const q=String(x.q).trim();
+        if(!/\?$/.test(q)||/איזה|איזו|אילו|מה מהבאים|מי מ|כמה|___|—|באיזו|באיזה|לאיזה|לאיזו|מאיזה|מאיזו/.test(q)) return;
+        if(!/^(למה|איך|מה|מהי|מהו|מהם|מהן|מדוע)/.test(q)||/^איך קוראים|^מה השם/.test(q)) return;
+        const ans=String(x.o[x.a]).trim(), why=String(x.why||'').trim();
+        C.push({w:/^(למה|איך|מדוע)/.test(q)?2:1,q,a:(why&&why.indexOf(ans)>=0)?why:ans+(why?'.\n'+why:'')});
+      })));
+      if(!C.length) return null;
+      const B=C.some(c=>c.w===2)?C.filter(c=>c.w===2):C;
+      const c=B[hash(ex.id)%B.length];
+      return {q:c.q,a:c.a.replace(/\.\.$/,'.')};
+    }
+    function full(el){
+      const big=el.querySelector('.m-big'); const t=((big?big.textContent:'')+' '+el.textContent).replace(/\s+/g,' ');
+      const m=/(\d+)\s*\/\s*(\d+)/.exec(big?big.textContent:'')||/(\d+)\s*מתוך\s*(\d+)/.exec(t);
+      return !!(m&&+m[2]>=10);
+    }
+    function add(el){
+      if(el.dataset.tmOq) return; el.dataset.tmOq='1';
+      if(el.closest('#tmMorn,.up-wait')) return;
+      const pid=pidNow(), ex=exNow(); if(!pid||pid==='dad'||!ex||ex.type!=='up'||ex.subj==='math') return;
+      if(!full(el)) return;
+      const K='tm_oq_'+pid+'_'+ex.id; if(g(K)===today()) return;
+      const Q=openQ(pid,ex); if(!Q) return;
+      s(K,today());
+      const c=document.createElement('div'); c.className='tm-oq';
+      c.innerHTML='<h4>✍️ שאלה כמו במבחן</h4><p class="q">'+E(Q.q)+'</p><textarea aria-label="התשובה שלך" placeholder="אפשר לכתוב, או להגיד בקול 🗣️"></textarea><div class="bs"><button type="button" class="sh">לראות תשובה</button></div>';
+      c.querySelector('.sh').onclick=()=>{
+        const bs=c.querySelector('.bs');
+        bs.insertAdjacentHTML('beforebegin','<div class="a"><b>תשובה לדוגמה:</b>\n'+E(Q.a)+'</div>');
+        bs.innerHTML='<button type="button" class="ok">צדקתי 👍</button><button type="button" class="al">כמעט 🤏</button>';
+        const fin=(ok)=>{ try{ const L=JSON.parse(g('tm_oq_log')||'[]'); L.push({pid,ex:ex.id,ok:ok?1:0,t:Date.now()}); s('tm_oq_log',JSON.stringify(L.slice(-60))); }catch(e){}
+          bs.outerHTML='<div class="done">'+(ok?'יפה מאוד! 🌟 ככה עונים במבחן.':'כל הכבוד שניסית! 💪 מחר עוד פעם.')+'</div>'; };
+        bs.querySelector('.ok').onclick=()=>fin(true); bs.querySelector('.al').onclick=()=>fin(false);
+      };
+      const btn=el.querySelector(':scope > button,.m-btns'); if(btn) btn.before(c); else el.appendChild(c);
+    }
+    let T=0;
+    function scan(){ T=0; document.querySelectorAll('.tx-end,.m-res').forEach(el=>{ if(el.offsetParent!==null) add(el); }); }
+    new MutationObserver(()=>{ if(!T) T=setTimeout(scan,350); }).observe(document.body,{childList:true,subtree:true});
+    window.TM_OQ={openQ};
   }catch(e){}
 })();
 </script>
