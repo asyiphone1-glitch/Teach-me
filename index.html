@@ -12814,7 +12814,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611172330';
+  const TM_BUILD='202611180030';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -16769,6 +16769,45 @@ html:has(#tmSj.show),html:has(#tmSj.show) body{overflow:hidden;}
     function scan(){ T=0; document.querySelectorAll('.tx-end,.m-res').forEach(el=>{ if(el.offsetParent!==null) add(el); }); }
     new MutationObserver(()=>{ if(!T) T=setTimeout(scan,350); }).observe(document.body,{childList:true,subtree:true});
     window.TM_OQ={openQ};
+  }catch(e){}
+})();
+</script>
+
+<script>
+/* ===== ✅ ישיבת צוות 17.11 לילה (אושר, יואב): בחינה אחת = נכנסים ישר =====
+   כשילדה נכנסת מהמסך של 4 הבנות ויש לה רק בחינה פעילה אחת (ואין הכתבה / לוח הכפל) —
+   נפתחת ישר הבחינה. בית 🏠 / חץ מחזירים למסך המקצועות הרגיל.
+   לא מדלגים כשבמסך המקצועות יש משהו חשוב: בוקר הבחינה, ערב לפני בחינה, מסך השינה, משנה ליום שעוד מחכה,
+   וכפתור "להפעיל תזכורות" (פעם ביום). */
+(function(){
+  try{
+    const GIRLS={aviv:1,roni:1,hili:1,ziv:1};
+    const vis=el=>{ if(!el) return false; const r=el.getBoundingClientRect(); return r.width>4&&r.height>4&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'; };
+    let token=0;
+    function tryDirect(pid,my){
+      if(my!==token||!PROFILE||PROFILE.id!==pid) return;
+      const hub=document.getElementById('hub'), box=document.getElementById('hubBox');
+      if(!hub||!box||hub.classList.contains('hide')) return;
+      if(['tmMorn','tmEve','tmSleep','tmNight'].some(id=>vis(document.getElementById(id)))) return;
+      /* המשנה של היום עוד מחכה (משימת 10 ₪) — מראים את מסך המקצועות כדי שלא תפספס */
+      if(vis(document.querySelector('#avGo .pz.go'))) return;
+      /* כפתור "להפעיל תזכורות" — שתראה אותו פעם ביום, ואחר כך כבר נכנסים ישר */
+      if(vis(document.getElementById('tmPushBtn'))){ const k='tm_direct_pb_'+pid+'_'+new Date().toDateString(); try{ if(!localStorage.getItem(k)){ localStorage.setItem(k,'1'); return; } }catch(e){ return; } }
+      const sl=document.getElementById('tmSleep'); if(sl&&sl.offsetParent!==null) return;
+      const tiles=[...box.querySelectorAll('.hub-sbtn')].filter(b=>!b.closest('details')&&vis(b));
+      if(tiles.length!==1||!tiles[0].dataset.ex) return;
+      const ex=(EXAMS[pid]||[]).find(e=>e.id===tiles[0].dataset.ex); if(!ex||isArch(ex)) return;
+      try{ window.TM_DIRECT=(window.TM_DIRECT||0)+1; }catch(e){}
+      enterExam(ex.id);
+    }
+    const _sp=setProfile;
+    setProfile=function(id){
+      const r=_sp.apply(this,arguments);
+      if(GIRLS[id]){ const my=++token; setTimeout(()=>tryDirect(id,my),900); }
+      return r;
+    };
+    /* אם הילדה לחצה על משהו בעצמה לפני שהספקנו — לא קופצים לה */
+    document.addEventListener('pointerdown',()=>{ token++; },true);
   }catch(e){}
 })();
 </script>
