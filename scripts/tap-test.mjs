@@ -26,6 +26,9 @@ const BASE = 'http://127.0.0.1:' + server.address().port + '/';
 // ענן מדומה — אותו ממשק כמו firebase-bridge.js, הכול בזיכרון
 const MOCK_BRIDGE = `(function(){
   var M=window.__TM_DB=new Map(), L=[];
+  /* 18.11.2026: הבחינה של הילי בגיאוגרפיה תמיד בעוד 20 יום — כדי שהבדיקה לא תיכשל רק כי התאריך האמיתי עבר */
+  (function(){ var F=new Date(Date.now()+20*864e5), z=function(n){ return (n<10?'0':'')+n; };
+    M.set('meta/examDates',{dates:{'up-hili-geo1':F.getFullYear()+'-'+z(F.getMonth()+1)+'-'+z(F.getDate())}}); })();
   function snapDoc(p){ var v=M.get(p); return {id:p.split('/').pop(),exists:v!==undefined,data:function(){ return v===undefined?undefined:JSON.parse(JSON.stringify(v)); }}; }
   function kids(c){ var out=[]; M.forEach(function(v,k){ var i=k.lastIndexOf('/'); if(k.slice(0,i)===c) out.push(snapDoc(k)); }); return out; }
   function col(docs){ return {docs:docs,size:docs.length,empty:!docs.length,forEach:function(f){ docs.forEach(f); }}; }

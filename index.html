@@ -15733,22 +15733,22 @@ function __dadDelPatch(){
     const exit=()=>{ stop(); sm.close(); };
     function write(){
       stop();
-      box.innerHTML=sm.bar('😮‍💨 להירגע')+'<div class="tx-card tm-calm"><h3>מה מלחיץ אותך?</h3><p class="tx-note">כתבי הכול. אף אחד לא יראה — זה נמחק מיד.</p>'+
+      box.innerHTML=sm.bar('🌬️ להירגע')+'<div class="tx-card tm-calm"><h3>מה מלחיץ אותך?</h3><p class="tx-note">כתבי הכול. אף אחד לא יראה — זה נמחק מיד.</p>'+
         '<textarea id="clTx" rows="6" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="אני דואגת ש…"></textarea>'+
         '<button type="button" class="tx-next" id="clThrow">🗑️ לזרוק את הדאגה</button></div>';
       sm.wireBar(exit);
       $('clThrow').onclick=()=>{
         const t=$('clTx'); t.value=''; t.classList.add('gone');
         setTimeout(()=>{
-          box.innerHTML=sm.bar('😮‍💨 להירגע')+'<div class="tx-card tm-calm"><div class="e">💪</div><h3>יופי! הדאגה בחוץ.</h3><p>עכשיו הראש פנוי למבחן.</p>'+
-            ($('mnGo')?'<button type="button" class="tx-next" id="clRev">☀️ לחזרה אחרונה</button>':'')+
+          box.innerHTML=sm.bar('🌬️ להירגע')+'<div class="tx-card tm-calm"><div class="e">💪</div><h3>יופי! הדאגה בחוץ.</h3><p>עכשיו הראש פנוי למבחן.</p>'+
+            (toReview?'<button type="button" class="tx-next" id="clRev">☀️ לחזרה אחרונה</button>':'')+
             '<button type="button" class="tx-next sec" id="clDone">סיום</button></div>';
           sm.wireBar(exit); $('clDone').onclick=exit;
           if($('clRev')) $('clRev').onclick=toReview;
         },450);
       };
     }
-    box.innerHTML=sm.bar('😮‍💨 להירגע')+'<div class="tx-card tm-calm"><div class="tm-breath"><i></i><b id="clWord">שואפות… 🌬️</b></div>'+
+    box.innerHTML=sm.bar('🌬️ להירגע')+'<div class="tx-card tm-calm"><div class="tm-breath"><i></i><b id="clWord">שואפות… 🌬️</b></div>'+
       '<p class="tx-note"><span id="clLeft">30</span> שניות</p><button type="button" class="tx-next sec" id="clSkip">לדלג ←</button></div>';
     sm.wireBar(exit); $('clSkip').onclick=write;
     tm=setInterval(()=>{
@@ -15769,11 +15769,10 @@ function __dadDelPatch(){
       w.dataset.sig=sig;
       w.innerHTML='<div class="sun">☀️</div><h2>היום הבחינה ב'+E(subjName(ex))+'!</h2><p>בהצלחה '+E(P.name||'')+' 🍀</p>'+
         (items.length>=3?'<button type="button" class="go" id="mnGo">חזרה אחרונה<br><small style="font-size:1rem;font-weight:700">5 דקות · '+items.length+' דברים חשובים</small></button>':'')+
-        '<button type="button" class="calm" id="mnCalm">😮‍💨 להירגע דקה</button>'+
+        '<button type="button" class="calm" id="mnCalm">🌬️ להירגע דקה</button>'+
         '<button type="button" class="skip" id="mnSkip">למסך הרגיל</button>';
       $('mnSkip').onclick=()=>{ ls(mornSkipK(P.id),'1'); morning(); };
-      $('mnCalm').onclick=()=>calm(()=>{ const g=$('mnGo'); S().close(); if(g) g.click(); });
-      if($('mnGo')) $('mnGo').onclick=()=>{
+      const startRev=()=>{
         try{ CUR_EXAM=ex; }catch(e){}
         S().run({title:'☀️ חזרה אחרונה',items:mornItems(P.id,ex),game:'morn',back:()=>S().close(),onEnd:r=>{
           ls(mornSkipK(P.id),'1');
@@ -15782,6 +15781,8 @@ function __dadDelPatch(){
           S().wireBar(()=>S().close()); $('mnEnd').onclick=()=>S().close();
         }});
       };
+      if($('mnGo')) $('mnGo').onclick=startRev;
+      $('mnCalm').onclick=()=>calm(items.length>=3?startRev:null);
     }
     const nav=hb.querySelector('.hub-nav');
     if(nav){ if(nav.nextElementSibling!==w) nav.after(w); } else if(hb.firstElementChild!==w) hb.prepend(w);
