@@ -1,0 +1,16 @@
+name: tmp-dump
+on:
+  push:
+    branches: [tmp-dump-1711]
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '20'}
+      - run: node scripts/dump.mjs
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+      - uses: actions/upload-artifact@v4
+        with: {name: dump, path: out, retention-days: 1}
