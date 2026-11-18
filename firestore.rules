@@ -9,6 +9,11 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/dev/$(request.auth.uid))
         && get(/databases/$(database)/documents/dev/$(request.auth.uid)).data.ok == true;
     }
+    // 18.11.2026 (סקירת אבטחה, sec_approve, אושר): רק טלפון של הורים מאשר, מנתק או רואה את רשימת הטלפונים
+    function parent() {
+      return approved()
+        && get(/databases/$(database)/documents/dev/$(request.auth.uid)).data.get('who', '') == 'parent';
+    }
 
     // טלפון חדש רושם את עצמו כ"מחכה לאישור", ורואה רק את הרישום של עצמו
     match /dev/{uid} {
@@ -21,11 +26,13 @@ service cloud.firestore {
         && request.resource.data.who in ['aviv', 'roni', 'hili', 'ziv', 'parent', 'yaya']
         && (!('kind' in request.resource.data) || (request.resource.data.kind is string && request.resource.data.kind.size() <= 12))
         && (!('at' in request.resource.data) || request.resource.data.at is number);
+      // אישור, ניתוק ורשימת הטלפונים: רק טלפון של הורים. טלפון של ילדה לא יכול לאשר, גם לא את עצמו
+      allow read, update, delete: if parent();
     }
 
-    // כל השאר (כולל אישור טלפונים): רק טלפון מאושר
-    match /{document=**} {
-      allow read, write: if approved();
+    // כל השאר: רק טלפון מאושר (dev/ מטופל למעלה)
+    match /{col}/{rest=**} {
+      allow read, write: if approved() && col != 'dev';
     }
   }
 }
