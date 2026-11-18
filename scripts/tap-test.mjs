@@ -122,6 +122,20 @@ async function kid(page, pid) {
   // חלונות שקופצים בכניסה (תזכורת "בואי נתרגל" וכו׳) — סוגרים
   await dismiss(page);
 }
+async function waitVis(page, sel, ms) {
+  return page.locator(sel + ':visible').first().waitFor({ state: 'visible', timeout: ms }).then(() => true, () => false);
+}
+async function openPlanets(page) {
+  for (let i = 0; i < 3; i++) {
+    if (await waitVis(page, '[data-tmpl]', 1500)) return;
+    if (await waitVis(page, '.hub-sbtn[data-ex="up-hili-geo1"]', 1500)) {
+      await tapSel(page, '.hub-sbtn[data-ex="up-hili-geo1"]:visible');
+      await dismiss(page);
+      if (await waitVis(page, '[data-tmpl]', 4000)) return;
+    }
+    await dismiss(page);
+  }
+}
 async function dismiss(page) {
   for (let i = 0; i < 5; i++) {
     await page.waitForTimeout(450);
@@ -164,11 +178,13 @@ try {
   }
 
   // 3. 🪐 כוכבי הלכת: טעות אחת ואז הסדר הנכון
+  // 18.11.2026 ערב: יציב יותר — "בחינה אחת = נכנסים ישר" יכול להכניס את הילי לבד לבחינה (תלוי תזמון).
+  // מחכים עד שהכפתור של כוכבי הלכת או כפתור המקצוע באמת נראים, ולוחצים רק על מה שנראה.
   await kid(page, 'hili');
-  await tapSel(page, '.hub-sbtn[data-ex="up-hili-geo1"]'); await page.waitForTimeout(1500); await dismiss(page);
+  await openPlanets(page);
   if (process.env.DBG) await page.screenshot({ path: '/home/claude/tt/dbg3.png' });
   if (process.env.DBG) console.log(await page.evaluate(() => { let ce = null; try { ce = CUR_EXAM && CUR_EXAM.id; } catch (e) {} return JSON.stringify({ ce, pl: !!document.querySelector('[data-tmpl]'), upAll: !!document.getElementById('upAll'), prof: typeof PROFILE !== 'undefined' && PROFILE && PROFILE.id, vis: [...document.querySelectorAll('button')].filter(b => b.offsetParent).slice(0, 12).map(b => b.id || b.textContent.trim().slice(0, 20)) }); }));
-  if (!(await tapSel(page, '[data-tmpl]'))) errors.push('[planets] הכפתור "לסדר את כוכבי הלכת" לא הופיע אצל הילי');
+  if (!(await tapSel(page, '[data-tmpl]:visible'))) errors.push('[planets] הכפתור "לסדר את כוכבי הלכת" לא הופיע אצל הילי');
   else {
     await tapSel(page, '#tmPl .pl-c[data-k="5"]');
     for (let k = 0; k < 3; k++) await tapSel(page, '#tmPl .pl-c[data-k="' + k + '"]');

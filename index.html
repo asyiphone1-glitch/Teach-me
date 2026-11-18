@@ -12878,7 +12878,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611180830';
+  const TM_BUILD='202611182100';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -16025,6 +16025,13 @@ function __dadDelPatch(){
 .um-c h3 i{font-style:normal;background:var(--c);color:#fff;border-radius:50%;min-width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;}
 .um-c ul{margin:0;padding-inline-start:16px;font-size:.88rem;line-height:1.45;}
 .um-c .tp{margin-top:6px;font-size:.85rem;background:#FFF6D6;border-radius:10px;padding:5px 8px;}
+#upMmOv .um-hide{min-height:44px;border-radius:12px;border:2px solid var(--acc,#6E8C6A);background:#fff;color:#1F2430;font:700 .95rem 'Heebo',sans-serif;padding:0 12px;cursor:pointer;}
+#upMmOv .um-hint{display:none;text-align:center;font-weight:700;color:#1F2430;margin:0 0 10px;}
+#upMmOv.hid .um-hint{display:block;}
+#upMmOv.hid .um-c li:not(.um-sh),#upMmOv.hid .um-c .tp:not(.um-sh){color:transparent !important;background:#E6DECF;border-radius:8px;cursor:pointer;user-select:none;-webkit-user-select:none;margin-bottom:3px;}
+#upMmOv.hid .um-c li:not(.um-sh)::marker{color:#1F2430;}
+#upMmOv.hid .um-c .um-sh{animation:umPop .25s ease-out;}
+@keyframes umPop{from{transform:scale(.96);opacity:.4}to{transform:none;opacity:1}}
 .um-tk{max-width:760px;margin:12px auto 0;background:#fff;border:2px dashed var(--acc,#6E8C6A);border-radius:16px;padding:10px 12px;font-size:.9rem;color:#1F2430;}
 .um-tk b.w{font-size:1.2rem;letter-spacing:.05em;}
 #upPrint{display:none;}
@@ -16069,11 +16076,24 @@ function __dadDelPatch(){
   function openMap(exId){
     const D=data(exId); if(!D) return;
     let o=$('upMmOv'); if(!o){ o=document.createElement('div'); o.id='upMmOv'; o.setAttribute('role','dialog'); o.setAttribute('aria-label','מפת זיכרון'); document.body.appendChild(o); }
-    o.innerHTML='<div class="um-top"><button type="button" class="um-x" id="umX" aria-label="סגירה">✕</button><h2>🗺️ מפת זיכרון</h2></div>'+
-      '<div class="um-core">'+E(D.title)+'</div><div class="um-grid">'+
+    o.classList.remove('hid');
+    o.innerHTML='<div class="um-top"><button type="button" class="um-x" id="umX" aria-label="סגירה">✕</button><h2>🗺️ מפת זיכרון</h2><button type="button" class="um-hide" id="umH" aria-pressed="false">🙈 להסתיר</button></div>'+
+      '<div class="um-hint">נזכרים, ואז נוגעים לגלות 👆</div><div class="um-core">'+E(D.title)+'</div><div class="um-grid">'+
       D.T.map((t,i)=>'<div class="um-c" style="--c:'+COLS[i%COLS.length]+'"><h3><i>'+(i+1)+'</i><span>'+E(t.t)+'</span></h3><ul>'+keys(t,3).map(k=>'<li>'+E(k)+'</li>').join('')+'</ul>'+(t.tip?'<div class="tp">🧠 '+E(t.tip)+'</div>':'')+'</div>').join('')+
       '</div>'+(D.tricks.length?'<div class="um-tk"><b>🧠 טריקים לזכור</b>'+D.tricks.map(trickHtml).join('')+'</div>':'');
     $('umX').onclick=()=>o.classList.remove('show');
+    /* 🙈 להסתיר ולגלות (18.11.2026, מיכל): מכסים את המילים, נזכרים, ונוגעים כדי לגלות */
+    const H=$('umH');
+    H.onclick=()=>{
+      const on=!o.classList.contains('hid');
+      o.classList.toggle('hid',on);
+      o.querySelectorAll('.um-c li,.um-c .tp').forEach(x=>x.classList.remove('um-sh'));
+      H.textContent=on?'👀 להראות הכול':'🙈 להסתיר'; H.setAttribute('aria-pressed',on?'true':'false');
+    };
+    o.querySelector('.um-grid').onclick=ev=>{
+      if(!o.classList.contains('hid')) return;
+      const x=ev.target.closest&&ev.target.closest('.um-c li,.um-c .tp'); if(x) x.classList.add('um-sh');
+    };
     o.classList.add('show'); o.scrollTop=0;
     try{ localStorage.setItem('tm_mm_seen_'+D.pid+'_'+exId,String(Date.now())); }catch(e){}
   }
