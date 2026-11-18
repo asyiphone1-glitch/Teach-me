@@ -11533,10 +11533,17 @@ html.tm-locked .nv-par,html.tm-locked #parentBtn2,html.tm-locked #gateParent{dis
     if(!open) show();
     window.scrollTo(0,0);
   }
-  let away=0;
+  /* 18.11.2026 (בקשת אבא): בכל חזרה לאפליקציה בטלפון של הורים — ישר למסך הבית (לא רק אחרי דקה).
+     חוץ מצילום / בחירת תמונה (📸 חומר חדש): המצלמה מוציאה את האפליקציה לרקע, ושם לא מאפסים. */
+  let away=0, picking=0;
+  document.addEventListener('click',e=>{ const t=e.target&&e.target.closest&&e.target.closest('input[type=file],label'); if(t&&(t.matches('input[type=file]')||t.querySelector('input[type=file]')||(t.htmlFor&&document.getElementById(t.htmlFor)&&document.getElementById(t.htmlFor).type==='file'))) picking=Date.now(); },true);
+  document.addEventListener('change',e=>{ if(e.target&&e.target.type==='file') picking=0; },true);
+  const _ic=HTMLInputElement.prototype.click;
+  HTMLInputElement.prototype.click=function(){ if(this.type==='file') picking=Date.now(); return _ic.apply(this,arguments); };
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden){ away=Date.now(); return; }
-    if(away&&Date.now()-away>=60*1000) goHome(); away=0;
+    const pick=picking&&Date.now()-picking<10*60*1000;
+    if(away&&!pick&&Date.now()-away>=2000) goHome(); away=0;
   });
   addEventListener('pageshow',e=>{ if(e.persisted) goHome(); });
 })();
@@ -12871,7 +12878,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"hili-geo1","pid":
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611180100';
+  const TM_BUILD='202611180830';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
