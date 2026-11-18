@@ -13,6 +13,8 @@ concurrency:
 jobs:
   news:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,7 +23,19 @@ jobs:
         with:
           node-version: '20'
       - run: npm install --no-save web-push@3
+      - name: Restore server sign-in
+        run: git fetch -q --depth=1 origin tm-state && git show FETCH_HEAD:rt.enc > /tmp/tm-rt.enc || true
       - run: node scripts/news.mjs
         env:
           VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
           FIREBASE_SA: ${{ secrets.FIREBASE_SA }}
+      - name: Save server sign-in
+        # עותק מוצפן של החיבור הקבוע של השרת, בענף נפרד (tm-state) כדי לא להפריע ל-dev/main
+        if: always()
+        run: |
+          if [ -s /tmp/tm-rt.new ]; then
+            d=$(mktemp -d); cp /tmp/tm-rt.new "$d/rt.enc"; cd "$d"
+            git init -q && git add rt.enc
+            git -c user.name=teach-me-bot -c user.email=teach-me-bot@users.noreply.github.com commit -qm "server sign-in (encrypted)"
+            git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:tm-state
+          fi

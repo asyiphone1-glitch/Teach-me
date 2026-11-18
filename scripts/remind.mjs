@@ -2,6 +2,7 @@
 // רץ ב-GitHub Actions: בבוקר (07:30) "בהצלחה היום", בערב (17:00) "מחר" ו"עוד יומיים".
 // קורא מ-Firebase: meta/examDates, meta/archived, meta/examNames ואת כל המנויים ב-push/.
 import webpush from 'web-push';
+import { anonSignIn } from './auth.mjs';
 
 const API_KEY='AIzaSyAkpMP6QkJZS67fOvVwP3yeuz-gMu1150Q';
 const PROJECT='teach-me-cd228';
@@ -28,8 +29,7 @@ async function signInSA(sa){
 }
 async function signIn(){
   if(process.env.FIREBASE_SA){ try{ await signInSA(JSON.parse(process.env.FIREBASE_SA)); console.log('auth: service account'); return; }catch(e){ console.log('SA failed, falling back:',e.message); } }
-  const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+API_KEY,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
-  const j=await r.json(); if(!j.idToken) throw new Error('signIn failed'); TOKEN=j.idToken; console.log('auth: anonymous');
+  TOKEN=await anonSignIn(API_KEY,PROJECT); console.log('auth: anonymous');
 }
 const H=()=>({authorization:'Bearer '+TOKEN});
 const val=d=>{ try{ return JSON.parse(d.fields.j.stringValue); }catch(e){ return null; } };

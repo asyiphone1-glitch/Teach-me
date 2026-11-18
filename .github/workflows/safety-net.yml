@@ -57,5 +57,7 @@ jobs:
     secrets: inherit
   news:
     needs: promote
+    permissions:
+      contents: write
     uses: ./.github/workflows/news.yml
     secrets: inherit

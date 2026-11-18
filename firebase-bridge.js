@@ -51,6 +51,88 @@
     return { doc:doc, collection:collection };
   }
 
+
+  /* ---------- 18.11.2026: נעילת מסד הנתונים (אושר ע״י ההורה) ----------
+     כל טלפון נרשם ב-dev/{uid}. רק טלפון שאבא או אמא אישרו קורא וכותב (firestore.rules).
+     טלפון שכבר היה מחובר לפני פרסום הכללים נרשם כמאושר. אחרי הפרסום — טלפון חדש מחכה לאישור.
+     המסמכים ב-dev/ נשמרים רגיל (לא כ-j), כדי שהכללים יוכלו לבדוק את ok. */
+  var KN={aviv:'אביב',roni:'רוני',hili:'הילי',ziv:'זיו'};
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function myLock(){ var L=lsGet('tm_lock'); return KN[L]?L:null; }
+  function devKind(){ var u=navigator.userAgent; return /iPhone/.test(u)?'אייפון':/iPad/.test(u)?'אייפד':/Android/.test(u)?'אנדרואיד':'מחשב'; }
+  function el(tag,css,txt){ var e=document.createElement(tag); if(css) e.style.cssText=css; if(txt!=null) e.textContent=txt; return e; }
+  function devGate(fs,uid){
+    var ref=fs.collection('dev').doc(uid);
+    return ref.get().then(function(d){
+      if(d.exists) return d.data().ok===true;
+      var base={at:Date.now(),kind:devKind(),who:myLock()||'parent'};
+      return ref.set(Object.assign({},base,{ok:true})).then(function(){ return true; },function(){
+        return ref.set(Object.assign({},base,{ok:false})).then(function(){ return false; },function(){ return true; });
+      });
+    },function(){ return true; })   /* בלי קליטה — ממשיכים עם מה שבזיכרון של הטלפון */
+    .then(function(okd){
+      if(okd) return;
+      return new Promise(function(res){
+        var w=el('div','position:fixed;inset:0;z-index:2147483000;background:#F4F6FB;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font-family:inherit;direction:rtl');
+        w.appendChild(el('div','font-size:3rem','🔒'));
+        w.appendChild(el('div','font-size:1.25rem;font-weight:700;color:#1F2A44','הטלפון מחכה לאישור של אבא או אמא'));
+        w.appendChild(el('div','font-size:.95rem;color:#55607A','בטלפון של ההורים: teach-me ← 📱 טלפונים ← ✅'));
+        w.appendChild(el('div','font-size:.85rem;color:#8A93A8',devKind()+' · '+uid.slice(0,5)));
+        var put=function(){ (document.body||document.documentElement).appendChild(w); };
+        if(document.body) put(); else document.addEventListener('DOMContentLoaded',put);
+        var off=ref.onSnapshot(function(s){ if(s.exists&&s.data().ok===true){ off(); w.remove(); res(); } },function(){});
+      });
+    });
+  }
+  /* רשימת הטלפונים — רק בטלפון של הורים (לא נעול על ילדה) */
+  function devAdmin(fs){
+    if(myLock()) return;
+    var list=[], btn=null, box=null;
+    var col=fs.collection('dev');
+    function name(d){ return d.who==='server'?'⚙️ '+(d.kind||'שרת'):d.who==='yaya'?'🏠 yaya · '+(d.kind||''):(KN[d.who]?'טלפון של '+KN[d.who]:'טלפון של הורים')+' · '+(d.kind||''); }
+    function when(t){ try{ return new Date(t).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'}); }catch(e){ return ''; } }
+    function paintBtn(){
+      var pend=list.filter(function(x){ return x.d.ok!==true; }).length;
+      var inParent=!!document.querySelector('#parentOv.show,#parentOv.on,#parentOv.open,#parentOv[style*="flex"]');
+      if(!btn){ btn=el('button','position:fixed;left:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2147482000;border:none;border-radius:999px;padding:10px 16px;font:inherit;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.18);direction:rtl'); btn.type='button'; btn.onclick=openBox; document.body.appendChild(btn); }
+      btn.textContent=pend?'📱 '+pend+' מחכים לאישור':'📱 טלפונים';
+      btn.style.background=pend?'#E8590C':'#1F55B8'; btn.style.color='#fff';
+      btn.style.display=(pend||inParent)?'':'none';
+      if(box) paintBox();
+    }
+    function act(id,ok){ var r=col.doc(id); (ok?r.update({ok:true,okAt:Date.now()}):r.delete()).catch(function(){ alert('לא הצלחתי. בדקו חיבור לאינטרנט.'); }); }
+    function paintBox(){
+      var inner=box.firstChild; inner.innerHTML='';
+      var top=el('div','display:flex;justify-content:space-between;align-items:center;margin-bottom:10px');
+      top.appendChild(el('div','font-size:1.15rem;font-weight:700','📱 טלפונים'));
+      var x=el('button','border:none;background:#EEF1F7;border-radius:10px;padding:6px 12px;font:inherit','סגור'); x.type='button'; x.onclick=function(){ box.remove(); box=null; };
+      top.appendChild(x); inner.appendChild(top);
+      list.slice().sort(function(a,b){ return (a.d.ok===true)-(b.d.ok===true)||(b.d.at||0)-(a.d.at||0); }).forEach(function(it){
+        var me=it.id===(firebase.auth().currentUser||{}).uid;
+        var row=el('div','display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #E6E9F0');
+        var t=el('div','flex:1;min-width:0'); t.appendChild(el('div','font-weight:600',name(it.d)+(me?' (הטלפון הזה)':'')));
+        t.appendChild(el('div','font-size:.8rem;color:#7A849A',(it.d.ok===true?'מאושר':'⏳ מחכה')+' · '+when(it.d.at)+' · '+it.id.slice(0,5)));
+        row.appendChild(t);
+        if(it.d.ok!==true){ var a=el('button','border:none;background:#2F9E44;color:#fff;border-radius:10px;padding:7px 12px;font:inherit;font-weight:700','✅ אשר'); a.type='button'; a.onclick=function(){ act(it.id,true); }; row.appendChild(a); }
+        if(!me){ var r=el('button','border:none;background:#FFE3E3;color:#C92A2A;border-radius:10px;padding:7px 12px;font:inherit','❌'); r.type='button'; r.onclick=function(){ if(confirm(it.d.ok===true?'לנתק את הטלפון הזה?':'לדחות את הטלפון הזה?')) act(it.id,false); }; row.appendChild(r); }
+        inner.appendChild(row);
+      });
+    }
+    function openBox(){
+      if(box) return;
+      box=el('div','position:fixed;inset:0;z-index:2147482500;background:rgba(20,28,48,.45);display:flex;align-items:flex-end;justify-content:center;direction:rtl');
+      box.appendChild(el('div','background:#fff;color:#1F2A44;width:100%;max-width:520px;max-height:80vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))'));
+      box.onclick=function(e){ if(e.target===box){ box.remove(); box=null; } };
+      document.body.appendChild(box); paintBox();
+    }
+    function start(){
+      col.onSnapshot(function(s){ list=s.docs.map(function(d){ return {id:d.id,d:d.data()}; }); paintBtn(); },function(){});
+      var po=document.getElementById('parentOv');
+      if(po&&window.MutationObserver) new MutationObserver(function(){ if(btn) paintBtn(); }).observe(po,{attributes:true,attributeFilter:['class','style']});
+    }
+    if(document.body) start(); else document.addEventListener('DOMContentLoaded',start);
+  }
+
   var dbP=null;
   function getDb(){
     if(dbP) return dbP;
@@ -62,7 +144,7 @@
         try{ fs.enablePersistence({synchronizeTabs:true}).catch(function(){}); }catch(e){}
         return new Promise(function(ok,bad){
           var done=false;
-          firebase.auth().onAuthStateChanged(function(u){ if(u&&!done){ done=true; ok(makeDb(fs)); } });
+          firebase.auth().onAuthStateChanged(function(u){ if(u&&!done){ done=true; devGate(fs,u.uid).then(function(){ ok(makeDb(fs)); devAdmin(fs); }); } });
           firebase.auth().signInAnonymously().catch(function(e){ if(!done){ done=true; bad(e); } });
           setTimeout(function(){ if(!done){ done=true; bad({code:'timeout'}); } },20000);
         });

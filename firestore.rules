@@ -1,10 +1,25 @@
 rules_version = '2';
-// teach-me — חוקים קבועים (12.11.2026). במקום "מצב בדיקה" שפג ב-8.12.
-// קריאה וכתיבה רק למי שנכנס דרך האפליקציה (כניסה אנונימית של Firebase). בלי תאריך תפוגה.
+// teach-me — נעילה לטלפונים מאושרים (18.11.2026, אושר ע״י ההורה). מחליף את "כל מי שנכנס" מ-12.11.
+// כל טלפון (וגם השרת של התזכורות ו-yaya) נרשם ב-dev/{uid}. רק מי שאבא או אמא אישרו קורא וכותב.
+// מדביקים את הקובץ הזה ב-Firebase: Firestore Database > Rules > Publish.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function approved() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/dev/$(request.auth.uid))
+        && get(/databases/$(database)/documents/dev/$(request.auth.uid)).data.ok == true;
+    }
+
+    // טלפון חדש רושם את עצמו כ"מחכה לאישור", ורואה רק את הרישום של עצמו
+    match /dev/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.ok == false;
+    }
+
+    // כל השאר (כולל אישור טלפונים): רק טלפון מאושר
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if approved();
     }
   }
 }

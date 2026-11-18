@@ -4,6 +4,7 @@
 // זמן לימוד = כמו ברבעים במסך הבית: סכום זמני התשובות, עד 90 שניות לשאלה.
 // לא שולח פעמיים באותו יום (meta/weeklySent). FORCE=1 = שליחה עכשיו (לבדיקה ידנית).
 import webpush from 'web-push';
+import { anonSignIn } from './auth.mjs';
 import crypto from 'node:crypto';
 
 const API_KEY='AIzaSyAkpMP6QkJZS67fOvVwP3yeuz-gMu1150Q';
@@ -30,8 +31,7 @@ async function signInSA(sa){
 }
 async function signIn(){
   if(process.env.FIREBASE_SA){ try{ await signInSA(JSON.parse(process.env.FIREBASE_SA)); return; }catch(e){ console.log('SA failed:',e.message); } }
-  const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+API_KEY,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({returnSecureToken:true})});
-  const j=await r.json(); if(!j.idToken) throw new Error('signIn failed'); TOKEN=j.idToken;
+  TOKEN=await anonSignIn(API_KEY,PROJECT);
 }
 const H=()=>({authorization:'Bearer '+TOKEN});
 const val=d=>{ try{ return JSON.parse(d.fields.j.stringValue); }catch(e){ return null; } };
