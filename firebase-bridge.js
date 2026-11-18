@@ -13,6 +13,8 @@
   /* 18.11.2026 לילה (אושר): App Check — הענן מקבל רק בקשות שבאות מהאפליקציה עצמה.
      כבוי עד שמדביקים כאן את מפתח האתר (reCAPTCHA v3) מקונסול Firebase. ריק = כמו קודם. */
   var APPCHECK_KEY='';
+  /* 18.11.2026 (המורה שלי, אושר): אותן הגדרות גם לספריית ה-AI (lib/fb13) */
+  window.TM_FB_CFG=CFG; window.TM_APPCHECK_KEY=APPCHECK_KEY;
   var V='10.12.2', BASE='https://www.gstatic.com/firebasejs/'+V+'/';
   function load(src){ return new Promise(function(ok,bad){ var s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=bad; document.head.appendChild(s); }); }
 

@@ -1,0 +1,5 @@
+Firebase JavaScript SDK 13.4.0 (firebase-app.js, firebase-ai.js, firebase-app-check.js)
+Copyright Google LLC. Licensed under the Apache License, Version 2.0:
+https://www.apache.org/licenses/LICENSE-2.0
+Copied from the npm package "firebase" (CDN builds). The only change: imports point to ./firebase-app.js
+instead of https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js, so nothing is loaded from outside the repo.

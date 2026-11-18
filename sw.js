@@ -1,10 +1,11 @@
+/* 18.11.2026: המטמון tm-tts (קבצי הקול של הילה) לא נמחק בעדכון. */
 /* teach-me — תמיד הגרסה החדשה (14.11.2026, אושר).
    קבצי האפליקציה (html/js): קודם מהרשת — כך כל חומר חדש מגיע מיד. אם אין אינטרנט, או שהרשת איטית מ-4 שניות —
    מהזיכרון של הטלפון (והגרסה החדשה ממשיכה לרדת ברקע). תמונות, אייקונים וגופנים: מהזיכרון, ומתעדכנים ברקע. */
-const C='tm-v27';
-const CORE=['./','index.html','tm-err.js','firebase-bridge.js','manifest.webmanifest','icon-192.png','dictation.html','kefel.html','t3d.js','lib/three-r128.min.js'];
+const C='tm-v28';
+const CORE=['./','index.html','tm-err.js','firebase-bridge.js','tm-voice.js','tm-tutor.js','manifest.webmanifest','icon-192.png','dictation.html','kefel.html','t3d.js','lib/three-r128.min.js'];
 self.addEventListener('install',e=>{ self.skipWaiting(); e.waitUntil(caches.open(C).then(c=>c.addAll(CORE).catch(()=>{}))); });
-self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
+self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C&&k!=='tm-tts').map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
 self.addEventListener('fetch',e=>{
   const r=e.request; if(r.method!=='GET') return;
   const u=new URL(r.url);
