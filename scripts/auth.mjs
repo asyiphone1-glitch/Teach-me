@@ -29,8 +29,9 @@ async function ensureDev(project, uid, tok) {
   const make = ok => fetch(base + '?currentDocument.exists=false', { method: 'PATCH', headers: H,
     body: JSON.stringify({ fields: { ok: { booleanValue: ok }, kind: { stringValue: 'שרת התזכורות' }, who: { stringValue: 'server' }, at: { integerValue: String(Date.now()) } } }) });
   if ((await make(true)).ok) return true;      // לפני שהכללים החדשים פורסמו
-  await make(false);
-  console.log('השרת נרשם וממתין לאישור של אבא ברשימת הטלפונים ב-teach-me.');
+  /* 18.11.2026 לילה: אחרי ההקשחה זר (וגם השרת) לא יכול להירשם בשם "שרת". השרת צריך מפתח שירות. */
+  if ((await make(false)).ok) { console.log('השרת נרשם וממתין לאישור של אבא ברשימת הטלפונים ב-teach-me.'); return false; }
+  console.log('⚠️ השרת לא יכול להירשם — צריך להוסיף את מפתח השירות FIREBASE_SA ב-Secrets של המאגר.');
   return false;
 }
 

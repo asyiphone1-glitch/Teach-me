@@ -13,8 +13,14 @@ service cloud.firestore {
     // טלפון חדש רושם את עצמו כ"מחכה לאישור", ורואה רק את הרישום של עצמו
     match /dev/{uid} {
       allow get: if request.auth != null && request.auth.uid == uid;
+      // 18.11.2026 לילה (בדיקת אבטחה, אושר): זר לא יכול להירשם בשם "שרת התזכורות" או בשם ארוך ומטעה.
+      // מותר רק: טלפון של ילדה / של הורים / של yaya, עם שם מכשיר קצר. השרתים נכנסים עם מפתח השירות (FIREBASE_SA).
       allow create: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.ok == false;
+        && request.resource.data.keys().hasOnly(['ok', 'at', 'kind', 'who'])
+        && request.resource.data.ok == false
+        && request.resource.data.who in ['aviv', 'roni', 'hili', 'ziv', 'parent', 'yaya']
+        && (!('kind' in request.resource.data) || (request.resource.data.kind is string && request.resource.data.kind.size() <= 12))
+        && (!('at' in request.resource.data) || request.resource.data.at is number);
     }
 
     // כל השאר (כולל אישור טלפונים): רק טלפון מאושר

@@ -88,7 +88,8 @@ for(const [id,d] of Object.entries(dates)){
 }
 const title='📊 השבוע ב-teach-me';
 const body=lines.join(' · ')+'\n'+(next?'📅 הבחינה הקרובה: '+NM[next.pid]+(next.sn?' — '+next.sn:'')+' ב-'+heDate(next.d):'📅 אין בחינה קרובה ביומן');
-console.log(title+'\n'+body);
+/* 18.11.2026 (בדיקת אבטחה, אושר): המאגר ציבורי וה-log גלוי לכולם — לא מדפיסים את תוכן הסיכום */
+console.log('summary ready,',lines.length,'lines');
 
 const subs=(await listCol('push')).filter(s=>s.sub&&s.sub.endpoint&&s.who==='parent');
 let n=0;

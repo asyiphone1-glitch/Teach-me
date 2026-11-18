@@ -10,6 +10,9 @@
     messagingSenderId:"91472219194",
     appId:"1:91472219194:web:32e3fecdc791bc7ec63903"
   };
+  /* 18.11.2026 לילה (אושר): App Check — הענן מקבל רק בקשות שבאות מהאפליקציה עצמה.
+     כבוי עד שמדביקים כאן את מפתח האתר (reCAPTCHA v3) מקונסול Firebase. ריק = כמו קודם. */
+  var APPCHECK_KEY='';
   var V='10.12.2', BASE='https://www.gstatic.com/firebasejs/'+V+'/';
   function load(src){ return new Promise(function(ok,bad){ var s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=bad; document.head.appendChild(s); }); }
 
@@ -60,6 +63,9 @@
   function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function myLock(){ var L=lsGet('tm_lock'); return KN[L]?L:null; }
   function devKind(){ var u=navigator.userAgent; return /iPhone/.test(u)?'אייפון':/iPad/.test(u)?'אייפד':/Android/.test(u)?'אנדרואיד':'מחשב'; }
+  /* 18.11.2026 לילה (בדיקת אבטחה, אושר): קוד גדול להשוואה — מאשרים רק כשהקוד זהה לקוד על המסך של הטלפון */
+  function code(id){ return String(id||'').slice(0,5); }
+  var CODE_CSS='font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;letter-spacing:.12em;direction:ltr;unicode-bidi:isolate';
   function el(tag,css,txt){ var e=document.createElement(tag); if(css) e.style.cssText=css; if(txt!=null) e.textContent=txt; return e; }
   function devGate(fs,uid){
     var ref=fs.collection('dev').doc(uid);
@@ -77,7 +83,9 @@
         w.appendChild(el('div','font-size:3rem','🔒'));
         w.appendChild(el('div','font-size:1.25rem;font-weight:700;color:#1F2A44','הטלפון מחכה לאישור של אבא או אמא'));
         w.appendChild(el('div','font-size:.95rem;color:#55607A','בטלפון של ההורים: teach-me ← 📱 טלפונים ← ✅'));
-        w.appendChild(el('div','font-size:.85rem;color:#8A93A8',devKind()+' · '+uid.slice(0,5)));
+        w.appendChild(el('div','font-size:.95rem;color:#55607A;margin-top:6px','הקוד של הטלפון הזה ('+devKind()+'):'));
+        w.appendChild(el('div',CODE_CSS+';font-size:2.4rem;color:#1F2A44;background:#fff;border:2px solid #D5DBE8;border-radius:14px;padding:8px 18px',code(uid)));
+        w.appendChild(el('div','font-size:.85rem;color:#8A93A8','ההורים מאשרים רק אם רואים אצלם את אותו קוד'));
         var put=function(){ (document.body||document.documentElement).appendChild(w); };
         if(document.body) put(); else document.addEventListener('DOMContentLoaded',put);
         var off=ref.onSnapshot(function(s){ if(s.exists&&s.data().ok===true){ off(); w.remove(); res(); } },function(){});
@@ -107,12 +115,14 @@
       top.appendChild(el('div','font-size:1.15rem;font-weight:700','📱 טלפונים'));
       var x=el('button','border:none;background:#EEF1F7;border-radius:10px;padding:6px 12px;font:inherit','סגור'); x.type='button'; x.onclick=function(){ box.remove(); box=null; };
       top.appendChild(x); inner.appendChild(top);
+      if(list.some(function(it){ return it.d.ok!==true; })) inner.appendChild(el('div','background:#FFF4E6;color:#8A4B08;border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:.88rem','לאשר ✅ רק אם הקוד הגדול זהה לקוד שמופיע על המסך של הטלפון שביד. לא מכירים? ❌'));
       list.slice().sort(function(a,b){ return (a.d.ok===true)-(b.d.ok===true)||(b.d.at||0)-(a.d.at||0); }).forEach(function(it){
         var me=it.id===(firebase.auth().currentUser||{}).uid;
         var row=el('div','display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #E6E9F0');
         var t=el('div','flex:1;min-width:0'); t.appendChild(el('div','font-weight:600',name(it.d)+(me?' (הטלפון הזה)':'')));
         t.appendChild(el('div','font-size:.8rem;color:#7A849A',(it.d.ok===true?'מאושר':'⏳ מחכה')+' · '+when(it.d.at)+' · '+it.id.slice(0,5)));
         row.appendChild(t);
+        if(it.d.ok!==true) row.appendChild(el('div',CODE_CSS+';font-size:1.35rem;background:#EEF1F7;border-radius:8px;padding:4px 8px',code(it.id)));
         if(it.d.ok!==true){ var a=el('button','border:none;background:#2F9E44;color:#fff;border-radius:10px;padding:7px 12px;font:inherit;font-weight:700','✅ אשר'); a.type='button'; a.onclick=function(){ act(it.id,true); }; row.appendChild(a); }
         if(!me){ var r=el('button','border:none;background:#FFE3E3;color:#C92A2A;border-radius:10px;padding:7px 12px;font:inherit','❌'); r.type='button'; r.onclick=function(){ if(confirm(it.d.ok===true?'לנתק את הטלפון הזה?':'לדחות את הטלפון הזה?')) act(it.id,false); }; row.appendChild(r); }
         inner.appendChild(row);
@@ -137,9 +147,10 @@
   function getDb(){
     if(dbP) return dbP;
     dbP=load(BASE+'firebase-app-compat.js')
-      .then(function(){ return Promise.all([load(BASE+'firebase-auth-compat.js'),load(BASE+'firebase-firestore-compat.js')]); })
+      .then(function(){ var L=[load(BASE+'firebase-auth-compat.js'),load(BASE+'firebase-firestore-compat.js')]; if(APPCHECK_KEY) L.push(load(BASE+'firebase-app-check-compat.js').catch(function(){})); return Promise.all(L); })
       .then(function(){
         var app=firebase.apps.length?firebase.app():firebase.initializeApp(CFG);
+        if(APPCHECK_KEY&&firebase.appCheck){ try{ var AC=firebase.appCheck(); AC.activate(firebase.appCheck.ReCaptchaV3Provider?new firebase.appCheck.ReCaptchaV3Provider(APPCHECK_KEY):APPCHECK_KEY,true); }catch(e){} }
         var fs=firebase.firestore();
         try{ fs.enablePersistence({synchronizeTabs:true}).catch(function(){}); }catch(e){}
         return new Promise(function(ok,bad){
