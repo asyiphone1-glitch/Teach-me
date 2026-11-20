@@ -10354,15 +10354,13 @@ const AV_WEEKS=[
     const link='<a href="'+url+'" target="_blank" rel="noopener">לפתוח את החוברת</a>';
     btn.disabled=true; box.textContent='מכינה את החוברת…';
     try{
-      const dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;
-      if(dl){
-        const r=await fetch(url); if(!r.ok) throw {code:'fetch'};
-        await dl.save({filename:fn,data:await r.blob()});
-        box.innerHTML='✅ החוברת נשמרה! פותחים אותה ומדפיסים 🖨️';
-      } else box.innerHTML='אפשר '+link+' ולהדפיס משם 🖨️';
+      /* 20.11.2026: מחוץ ל-Claude אין 'downloads' — מביאים את הקובץ ופותחים חלון שיתוף (הדפסה / שמירה) */
+      const r=await fetch(url); if(!r.ok) throw {code:'fetch'};
+      const blob=await r.blob();
+      if(window.TM_PDF) TM_PDF.offer(btn,new Blob([blob],{type:'application/pdf'}),fn);
+      else box.innerHTML='אפשר '+link+' ולהדפיס משם 🖨️';
     }catch(e){
-      const c=e&&e.code;
-      box.innerHTML=(c==='declined'?'השמירה בוטלה. ':'')+'אפשר גם '+link+' ולהדפיס משם 🖨️';
+      box.innerHTML='אפשר '+link+' ולהדפיס משם 🖨️';
     }finally{ btn.disabled=false; }
   }
   document.addEventListener('click',ev=>{
@@ -12893,7 +12891,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"roni-torah1","pid
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611201700';
+  const TM_BUILD='202611201730';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -16159,26 +16157,38 @@ function __dadDelPatch(){
   }
   /* ---------- 🖨️ חוברת סיכום ---------- */
   function shuf(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-  function printBook(exId){
+  function printBook(exId,btn){
     const D=data(exId); if(!D) return;
     const Q=[]; D.T.forEach(t=>{ (t.q||[]).forEach(q=>{ if(q&&q.q&&Array.isArray(q.o)) Q.push({q:q.q,o:q.o,a:q.o[q.a]}); }); (t.tf||[]).forEach(f=>{ if(f&&f.s) Q.push({q:'נכון או לא נכון? '+f.s,o:null,a:f.ok?'נכון':'לא נכון'}); }); });
     const QQ=shuf(Q).slice(0,15);
-    let el=$('upPrint'); if(!el){ el=document.createElement('div'); el.id='upPrint'; document.body.appendChild(el); }
-    el.innerHTML='<h1>📘 '+E(D.title)+'</h1><div>חוברת סיכום · '+E(D.name)+'</div>'+
-      '<h2>📖 כל החומר</h2>'+D.T.map((t,i)=>'<h3>'+(i+1)+'. '+E(t.t)+'</h3><div>'+E(t.ex).replace(/\n/g,'<br>')+'</div>'+(t.tip?'<div class="tip">🧠 '+E(t.tip)+'</div>':'')+
-        (Array.isArray(t.we)?t.we.filter(w=>w&&w.q).map(w=>'<div class="we"><b>דוגמה פתורה:</b> '+E(w.q)+(w.s&&w.s.length?'<ol>'+w.s.map(z=>'<li>'+E(z)+'</li>').join('')+'</ol>':'')+(w.a?'<div>התשובה: <b>'+E(w.a)+'</b></div>':'')+'</div>').join(''):'')).join('')+
-      '<h2 class="pb">⚡ דף שינון</h2><div class="sh">'+D.T.map((t,i)=>'<div><b>'+(i+1)+'. '+E(t.t)+'</b><ul>'+keys(t,2).map(k=>'<li>'+E(k)+'</li>').join('')+'</ul>'+(t.tip?'🧠 '+E(t.tip):'')+'</div>').join('')+'</div>'+
-      (D.tricks.length?'<h2>🧠 טריקים לזכור</h2>'+D.tricks.map(trickHtml).join(''):'')+
-      (QQ.length?'<h2 class="pb">✏️ שאלות לבדיקה</h2>'+QQ.map((q,i)=>'<div class="q"><b>'+(i+1)+'.</b> '+E(q.q)+(q.o?'<div>'+q.o.map((x,k)=>'('+'אבגד'[k]+') '+E(x)).join(' &nbsp; ')+'</div>':'')+'</div>').join('')+
-        '<h3>✅ תשובות</h3><div class="ans">'+QQ.map((q,i)=>(i+1)+'. '+E(q.a)).join(' · ')+'</div>':'');
-    document.body.classList.add('up-printing');
-    const done=()=>{ document.body.classList.remove('up-printing'); removeEventListener('afterprint',done); };
-    addEventListener('afterprint',done);
-    setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(done,60000); },150);
+    /* 20.11.2026: במקום window.print() (לא עובד באייפון מהמסך הבית) — קובץ PDF + חלון שיתוף */
+    const B=[{k:'h1',t:'📘 '+D.title},{k:'sub',t:'חוברת סיכום · '+D.name},{k:'h2',t:'📖 כל החומר'}];
+    D.T.forEach((t,i)=>{
+      B.push({k:'h3',t:(i+1)+'. '+(t.t||'')},{k:'p',t:String(t.ex||'')});
+      if(t.tip) B.push({k:'tip',t:'🧠 '+t.tip});
+      (Array.isArray(t.we)?t.we:[]).filter(w=>w&&w.q).forEach(w=>{
+        B.push({k:'p',t:'✏️ דוגמה פתורה: '+w.q});
+        (w.s||[]).forEach((z,j)=>B.push({k:'li',t:(j+1)+'. '+z}));
+        if(w.a) B.push({k:'p',t:'התשובה: '+w.a});
+      });
+    });
+    B.push({k:'h2',t:'⚡ דף שינון',pb:true});
+    D.T.forEach((t,i)=>{ B.push({k:'h3',t:(i+1)+'. '+(t.t||'')}); keys(t,2).forEach(k=>B.push({k:'li',t:k})); if(t.tip) B.push({k:'tip',t:'🧠 '+t.tip}); });
+    if(D.tricks.length){
+      B.push({k:'h2',t:'🧠 טריקים לזכור'});
+      D.tricks.forEach(x=>B.push({k:'tip',t:x.k==='acr'?'🔤 '+x.t+': '+x.w+' — '+x.L.map(l=>l[0]+' '+l[1]).join(' · '):'📖 '+x.t+': '+x.s}));
+    }
+    if(QQ.length){
+      B.push({k:'h2',t:'✏️ שאלות לבדיקה',pb:true});
+      QQ.forEach((q,i)=>{ B.push({k:'p',t:(i+1)+'. '+q.q}); if(q.o) B.push({k:'li',t:q.o.map((x,k)=>'('+'אבגד'[k]+') '+x).join('   ')}); });
+      B.push({k:'h3',t:'✅ תשובות'},{k:'ans',t:QQ.map((q,i)=>(i+1)+'. '+q.a).join(' · ')});
+    }
+    const fn=('סיכום '+D.name+' - '+D.title).replace(/[\\/:*?"<>|]/g,' ').slice(0,80)+'.pdf';
+    if(window.TM_PDF&&btn) TM_PDF.make(btn,B,fn,D.title);
   }
   document.addEventListener('click',ev=>{
     const m=ev.target.closest&&ev.target.closest('[data-upmm]'); if(m){ ev.preventDefault(); openMap(m.dataset.upmm); return; }
-    const p=ev.target.closest&&ev.target.closest('[data-upsk]'); if(p){ ev.preventDefault(); printBook(p.dataset.upsk); }
+    const p=ev.target.closest&&ev.target.closest('[data-upsk]'); if(p){ ev.preventDefault(); printBook(p.dataset.upsk,p); }
   });
   /* מסך החומר של בחינה שהועלתה: שני הכפתורים מתחת לכרטיס הראשון */
   setInterval(()=>{
@@ -16190,6 +16200,133 @@ function __dadDelPatch(){
       '<button type="button" class="mm-btn" data-upsk="'+E(ex.id)+'"><span class="mm-ic">🖨️</span><span><b>חוברת סיכום להדפסה</b><small>כל החומר · דף שינון · שאלות</small></span></button></div>');
   },700);
   window.TM_UPDOC={openMap,printBook};
+})();
+</script>
+<script>
+/* 🖨️ 20.11.2026 (אושר ע״י ההורה) — חוברת סיכום כקובץ PDF.
+   באייפון, באפליקציה מהמסך הבית, window.print() לא עושה כלום. לכן מציירים את החוברת לעמודי A4 בתוך הטלפון,
+   בונים מהם PDF, ופותחים את חלון השיתוף (משם: "הדפסה" או "שמירה בקבצים"). בלי ספריות חיצוניות. */
+(function(){
+  const W=1240,H=1754,M=96,LW=W-2*M;            /* A4 ב-150dpi */
+  const FONT="'Heebo','Arial Hebrew',Arial,sans-serif";
+  const ST={h1:[52,800,'#1d1d1d',1.25],h2:[38,800,'#1d1d1d',1.3],h3:[31,700,'#222',1.35],p:[27,400,'#222',1.5],li:[27,400,'#222',1.5],tip:[26,500,'#3b2f00',1.5],sub:[26,400,'#555',1.4],ans:[24,400,'#222',1.5]};
+  function wrap(ctx,text,w){
+    const out=[];
+    String(text).split('\n').forEach(par=>{
+      const words=par.split(/\s+/).filter(Boolean); let line='';
+      if(!words.length){ out.push(''); return; }
+      words.forEach(wd=>{
+        const t=line?line+' '+wd:wd;
+        if(ctx.measureText(t).width<=w||!line) line=t; else { out.push(line); line=wd; }
+        while(ctx.measureText(line).width>w&&line.length>8){ /* מילה ארוכה מאוד */
+          let k=line.length-1; while(k>1&&ctx.measureText(line.slice(0,k)).width>w) k--;
+          out.push(line.slice(0,k)); line=line.slice(k);
+        }
+      });
+      out.push(line);
+    });
+    return out;
+  }
+  /* blocks: [{k:'h1'|'h2'|'h3'|'p'|'li'|'tip'|'sub'|'ans', t:'…', pb:true}] */
+  function render(blocks,footer){
+    const pages=[]; let c,ctx,y;
+    function newPage(){
+      c=document.createElement('canvas'); c.width=W; c.height=H; ctx=c.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+      try{ ctx.direction='rtl'; }catch(e){}
+      ctx.textAlign='right'; ctx.textBaseline='top';
+      pages.push(c); y=M;
+    }
+    newPage();
+    blocks.forEach(b=>{
+      const s=ST[b.k]||ST.p, fs=s[0], lh=Math.round(fs*s[3]);
+      ctx.font=s[1]+' '+fs+'px '+FONT;
+      const box=b.k==='tip', ind=b.k==='li'?34:0, pad=box?18:0;
+      const lines=wrap(ctx,b.t,LW-ind-2*pad);
+      const before=b.k==='h1'?0:b.k==='h2'?30:b.k==='h3'?18:6;
+      const need=before+lines.length*lh+2*pad+(b.k==='h2'?12:0);
+      if((b.pb&&y>M)||(y+Math.min(need,(b.k[0]==='h'?need+lh*2:lh*2+2*pad))>H-M-40)) newPage();
+      else y+=before;
+      if(box){
+        const hh=Math.min(lines.length*lh+2*pad,H-M-40-y);
+        ctx.fillStyle='#FFF3C4'; ctx.beginPath();
+        if(ctx.roundRect) ctx.roundRect(M,y,LW,hh,16); else ctx.rect(M,y,LW,hh);
+        ctx.fill(); ctx.font=s[1]+' '+fs+'px '+FONT;
+      }
+      y+=pad;
+      lines.forEach((ln,i)=>{
+        if(y+lh>H-M-40){ newPage(); ctx.font=s[1]+' '+fs+'px '+FONT; }
+        ctx.fillStyle=s[2];
+        if(b.k==='li'&&i===0) ctx.fillText('•',W-M,y);
+        ctx.fillText(ln,W-M-ind-pad,y);
+        y+=lh;
+      });
+      y+=pad;
+      if(b.k==='h2'){ ctx.fillStyle='#999'; ctx.fillRect(M,y+2,LW,3); y+=12; }
+    });
+    pages.forEach((p,i)=>{
+      const x=p.getContext('2d'); x.font='400 20px '+FONT; x.fillStyle='#888'; x.textAlign='center'; x.textBaseline='alphabetic';
+      x.fillText((footer?footer+' · ':'')+'עמוד '+(i+1)+' מתוך '+pages.length,W/2,H-46);
+    });
+    return pages;
+  }
+  function b64bytes(d){ const s=atob(d.split(',')[1]); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
+  function pdf(pages){
+    const enc=new TextEncoder(), parts=[], offs=[]; let len=0;
+    const put=x=>{ const u=typeof x==='string'?enc.encode(x):x; parts.push(u); len+=u.length; };
+    const n=pages.length, PW=595.28, PH=841.89;
+    put('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'.replace(/[\u0080-ÿ]/g,'A'));
+    const obj=(id,body)=>{ offs[id]=len; put(id+' 0 obj\n'); body(); put('\nendobj\n'); };
+    obj(1,()=>put('<< /Type /Catalog /Pages 2 0 R >>'));
+    obj(2,()=>put('<< /Type /Pages /Count '+n+' /Kids ['+pages.map((_,i)=>(3+i*3)+' 0 R').join(' ')+'] >>'));
+    pages.forEach((p,i)=>{
+      const pg=3+i*3, im=pg+1, cs=pg+2;
+      const jpg=b64bytes(p.toDataURL('image/jpeg',0.85));
+      const cmd='q '+PW+' 0 0 '+PH+' 0 0 cm /Im0 Do Q';
+      obj(pg,()=>put('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW+' '+PH+'] /Resources << /XObject << /Im0 '+im+' 0 R >> >> /Contents '+cs+' 0 R >>'));
+      obj(im,()=>{ put('<< /Type /XObject /Subtype /Image /Width '+W+' /Height '+H+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpg.length+' >>\nstream\n'); put(jpg); put('\nendstream'); });
+      obj(cs,()=>put('<< /Length '+cmd.length+' >>\nstream\n'+cmd+'\nendstream'));
+      p.width=p.height=0; /* לשחרר זיכרון */
+    });
+    const total=3+n*3, xref=len;
+    let x='xref\n0 '+total+'\n0000000000 65535 f \n';
+    for(let i=1;i<total;i++) x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+    put(x+'trailer\n<< /Size '+total+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');
+    return new Blob(parts,{type:'application/pdf'});
+  }
+  /* תיבת ההודעה שמתחת לכפתור */
+  function msgBox(btn){
+    let box=btn.nextElementSibling;
+    if(!box||!box.classList.contains('sk-msg')){ box=document.createElement('div'); box.className='sk-msg'; btn.after(box); }
+    return box;
+  }
+  /* מוכן — כפתור גדול לשתף/להדפיס (השיתוף חייב לבוא מלחיצה) */
+  function offer(btn,blob,fn){
+    const box=msgBox(btn);
+    const file=new File([blob],fn,{type:'application/pdf'});
+    const url=URL.createObjectURL(blob);
+    const canShare=!!(navigator.share&&navigator.canShare&&(()=>{ try{ return navigator.canShare({files:[file]}); }catch(e){ return false; } })());
+    box.innerHTML='✅ החוברת מוכנה!'+
+      (canShare?'<button type="button" class="sk-go" style="display:block;width:100%;margin:8px 0 4px;padding:12px;border:0;border-radius:12px;font:800 1.05rem Heebo,sans-serif;background:var(--acc-fg,var(--plum,#6B4FB8));color:#fff;cursor:pointer">🖨️ להדפיס / לשמור</button><small>בחלון שנפתח בוחרים "הדפסה" 🖨️ או "שמירה בקבצים"</small>':'')+
+      '<div style="margin-top:4px"><a href="'+url+'" download="'+fn.replace(/"/g,'')+'" target="_blank" rel="noopener">'+(canShare?'או לפתוח את הקובץ':'לפתוח את החוברת ולהדפיס 🖨️')+'</a></div>';
+    const go=box.querySelector('.sk-go');
+    if(go) go.onclick=async()=>{
+      try{ await navigator.share({files:[file],title:fn.replace(/\.pdf$/,'')}); }
+      catch(e){ if(!e||e.name!=='AbortError') box.querySelector('small').textContent='לא הצליח לפתוח את חלון השיתוף — לוחצים על "לפתוח את הקובץ" 👇'; }
+    };
+  }
+  async function make(btn,blocks,fn,footer){
+    const box=msgBox(btn); btn.disabled=true; box.textContent='מכינה את החוברת… ⏳';
+    try{
+      try{ if(document.fonts&&document.fonts.load) await Promise.race([Promise.all([document.fonts.load('400 27px Heebo'),document.fonts.load('800 38px Heebo')]),new Promise(r=>setTimeout(r,2500))]); }catch(e){}
+      await new Promise(r=>setTimeout(r,30));
+      offer(btn,pdf(render(blocks,footer)),fn);
+    }catch(e){
+      box.textContent='משהו לא הצליח בהכנת החוברת 😕 נסי שוב';
+      try{ console.warn('pdf',e); }catch(_){}
+    }finally{ btn.disabled=false; }
+  }
+  window.TM_PDF={render,pdf,make,offer,msgBox};
 })();
 </script>
 
