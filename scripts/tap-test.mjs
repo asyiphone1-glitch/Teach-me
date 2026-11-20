@@ -118,7 +118,13 @@ async function home(page) {
 }
 async function kid(page, pid) {
   await home(page);
-  if (!(await tapSel(page, '.gate-btn[data-p="' + pid + '"]'))) throw new Error('לא מצאתי את הכפתור של ' + pid);
+  // 20.11.2026: לוחצים על השם והתמונה (למעלה) — כמו ילדה אמיתית. באמצע הרבע יש עכשיו מתגים ותאריכים.
+  const gb = page.locator('.gate-btn[data-p="' + pid + '"]').first();
+  if (!(await gb.count().catch(() => 0))) throw new Error('לא מצאתי את הכפתור של ' + pid);
+  await gb.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
+  const b = await gb.boundingBox({ timeout: 2000 }).catch(() => null);
+  if (b) { await gb.tap({ position: { x: b.width / 2, y: Math.min(70, b.height / 4) }, timeout: 5000 }).catch(() => page.touchscreen.tap(b.x + b.width / 2, b.y + Math.min(70, b.height / 4))); taps++; await page.waitForTimeout(300); }
+  else if (!(await tapSel(page, '.gate-btn[data-p="' + pid + '"]'))) throw new Error('לא מצאתי את הכפתור של ' + pid);
   // חלונות שקופצים בכניסה (תזכורת "בואי נתרגל" וכו׳) — סוגרים
   await dismiss(page);
 }
