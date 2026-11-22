@@ -9152,6 +9152,8 @@ window.TM_LOOK={
 .tx-opt.no{background:var(--bad-soft);border-color:var(--bad);}
 .tx-opt:disabled{cursor:default;}
 .tx-fb{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--acc-soft);font-size:.98rem;line-height:1.6;}
+.tm-more{margin-top:8px;padding:10px 14px;border-radius:14px;background:var(--surface);border-inline-start:4px solid var(--acc);font-size:.95rem;line-height:1.6;text-align:start}
+.tm-more p{margin:0 0 6px}.tm-more p:last-child{margin:0}.tm-more .tp{color:var(--acc)}
 .tx-next{display:block;width:100%;min-height:54px;margin-top:14px;border:none;border-radius:16px;background:var(--acc);color:var(--on-acc);font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;}
 .tx-next.sec{background:var(--surface);color:var(--acc-fg);border:2px solid var(--acc-fg);}
 .tx-pg{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:4px 0 6px;}
@@ -9313,6 +9315,29 @@ window.TM_LOOK={
   function open(){ ov.classList.add('show'); ov.scrollTop=0; try{ $('hub').classList.add('hide'); }catch(e){} }
   function close(){ ov.classList.remove('show'); RUN=null; try{ speechSynthesis.cancel(); }catch(e){} showHub(); }
   const PR=['נכון! 🎯','כל הכבוד!','אלופה! 🌟','בדיוק!','מעולה!','יפה מאוד!'];
+  /* 💡 עוד קצת (22.11.2026, בקשת אבא): אחרי כל תשובה — נכונה וגם לא נכונה — הרחבה קצרה מתחת, כדי שהתשובה תיקלט.
+     למה (של השאלה) + עד 2 שורות מההסבר של הנושא שהכי קשורות לשאלה + הטריק לזכור. */
+  function moreHtml(c){
+    try{
+      const M=(window.TM_UP&&TM_UP.more&&TM_UP.more(c.key))||{};
+      const why=String(M.why||c.why||'').trim(), tip=String(M.tip||'').trim();
+      const norm=t=>String(t||'').replace(/[\u0591-\u05C7]/g,'').replace(/[^\u05D0-\u05EAa-zA-Z0-9]+/g,' ').trim();
+      const stem=w=>w.length>3?w.replace(/^[ובהלמשכ]/,''):w;
+      const words=t=>new Set(norm(t).split(' ').filter(w=>w.length>1).map(stem));
+      const Q=words(c.q+' '+c.c), W=norm(why);
+      const lines=String(M.ex||'').split(/\n+/).map(x=>x.trim()).filter(x=>x&&norm(x)!==W&&norm(x).length>3);
+      const sc=lines.map((l,i)=>{ let n=0; words(l).forEach(w=>{ if(Q.has(w)) n++; }); return {l,i,n}; });
+      let pick=sc.filter(x=>x.n>0).sort((a,b)=>b.n-a.n||a.i-b.i).slice(0,2);
+      if(!pick.length) pick=sc.slice(0,2);
+      pick.sort((a,b)=>a.i-b.i);
+      let ex=pick.map(x=>x.l).join('\n'); if(ex.length>320) ex=ex.slice(0,317).replace(/\s+\S*$/,'')+'…';
+      if(!why&&!ex&&!tip) return '';
+      return '<div class="tm-more" dir="auto">'+
+        (why?'<p><b>💡 למה?</b> '+fx(why)+'</p>':'')+
+        (ex?'<p><b>📖 עוד קצת:</b> '+fx(ex).replace(/\n/g,'<br>')+'</p>':'')+
+        (tip?'<p class="tp"><b>🧠 לזכור:</b> '+fx(tip)+'</p>':'')+'</div>';
+    }catch(e){ return ''; }
+  }
 
   function run(cfg){ /* cfg: {title, items, game, onEnd(res), back} */
     RUN={cfg,i:0,ok:0,ms:0,res:[]};
@@ -9352,7 +9377,7 @@ window.TM_LOOK={
       try{ tRec(cfg.game,{q:c.q,tp:c.tp},ok,chosen,c.c,Object.assign({rid:c.key},c.ex?{ex:c.ex}:{},it.rv?{rv:1}:{})); }catch(e){}
       CUR_EXAM=ce;
       const fb=$('txFb');
-      fb.innerHTML='<div class="tx-fb">'+(ok?PR[Math.floor(Math.random()*PR.length)]+(it.rv?' התשובה תחזור עוד כמה ימים, לוודא שזכרת 💪':''):'התשובה הנכונה: <b>'+fx(c.c)+'</b>. לא נורא, היא תחזור מחר 🔁')+'</div>'+
+      fb.innerHTML='<div class="tx-fb">'+(ok?PR[Math.floor(Math.random()*PR.length)]+(it.rv?' התשובה תחזור עוד כמה ימים, לוודא שזכרת 💪':''):'התשובה הנכונה: <b>'+fx(c.c)+'</b>. לא נורא, היא תחזור מחר 🔁')+'</div>'+moreHtml(c)+
         '<button type="button" class="tx-next" id="txNext">'+(R.i+1<cfg.items.length?'הבאה ←':'לסיום 🏁')+'</button>';
       $('txNext').onclick=()=>{ R.i++; q(); };
       $('txNext').scrollIntoView({block:'nearest',behavior:'smooth'});
@@ -9379,7 +9404,7 @@ window.TM_LOOK={
       const ms=Math.min(Date.now()-t0,90000); R.ms+=ms; R.res.push({ok:false,ms});
       try{ ok?playCorrectSound():playWrongSound(); }catch(e){}
       const fb=$('txFb');
-      fb.innerHTML='<div class="tx-fb">'+(ok?TM_ALMOST.fixed()+' היא תחזור עוד מעט, לוודא שזכרת 🔁':'התשובה הנכונה: <b>'+fx(c.c)+'</b>. לא נורא, היא תחזור מחר 🔁')+'</div>'+
+      fb.innerHTML='<div class="tx-fb">'+(ok?TM_ALMOST.fixed()+' היא תחזור עוד מעט, לוודא שזכרת 🔁':'התשובה הנכונה: <b>'+fx(c.c)+'</b>. לא נורא, היא תחזור מחר 🔁')+'</div>'+moreHtml(c)+
         '<button type="button" class="tx-next" id="txNext">'+(R.i+1<cfg.items.length?'הבאה ←':'לסיום 🏁')+'</button>';
       $('txNext').onclick=()=>{ R.i++; q(); };
       $('txNext').scrollIntoView({block:'nearest',behavior:'smooth'});
@@ -12731,7 +12756,17 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"roni-torah1","pid
     if(BI&&!(+(L[L.length-1].at||0)>BI.at)) return {cur:[],old:L.slice().reverse().map(r=>r.mat.words.map(pick))};
     return {cur:L[L.length-1].mat.words.map(pick),old:L.slice(0,-1).reverse().map(r=>r.mat.words.map(pick))};
   }
-  window.TM_UP={openUp,openMat,practice,topics:topicsFor,all,parentView,dictLists,pool:poolOf,ready:readyFor};
+  /* 💡 עוד קצת (22.11.2026, בקשת אבא): אחרי כל תשובה — נכונה או לא — מראים למה, ועוד 1–2 שורות מההסבר של הנושא + הטריק.
+     key = 'up:'+rid+':'+ti+':q'+qi  או  ':f'+fi */
+  function more(key){
+    try{
+      const m=/^up:(.+):(\d+):([qf])(\d+)$/.exec(String(key||'')); if(!m) return null;
+      const r=RECS.get(m[1]); const t=r&&r.mat&&(r.mat.topics||[])[+m[2]]; if(!t) return null;
+      const it=(m[3]==='q'?t.q:t.tf)||[]; const x=it[+m[4]]||{};
+      return {why:String(x.why||'').trim(),ex:String(t.ex||'').trim(),tip:String(t.tip||'').trim()};
+    }catch(e){ return null; }
+  }
+  window.TM_UP={openUp,openMat,practice,topics:topicsFor,all,parentView,dictLists,pool:poolOf,ready:readyFor,more};
 })();
 </script>
 
@@ -12896,7 +12931,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"roni-torah1","pid
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611220930';
+  const TM_BUILD='202611221000';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
