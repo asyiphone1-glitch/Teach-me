@@ -3456,6 +3456,8 @@ function armMailTimer(){
 }
 async function showMailPrompt(){
   if(!PROFILE) return;
+  /* 22.11.2026 (בקשת אבא): בטלפון של הורים (לא נעול) אין הודעות של ילדה — ההורה הוא מנהל */
+  try{ if(!localStorage.getItem('tm_lock')) return; }catch(e){ return; }
   R_SUBJ='all'; const id=PROFILE.id, R=buildReport(id,await loadAll(id),'1'), box=document.getElementById('mailBox'), email=lsGet('rh_parent_email')||'';
   box.innerHTML=`<h2>⏰ עברה חצי שעה של לימוד!</h2><p>כל הכבוד, ${esc(PROFILE.name)}! 🎉 אפשר לשלוח להורה סיכום של מה שלמדת.</p>${email?'':'<input type="email" id="mailIn" placeholder="המייל של ההורה">'}<div class="ov-row"><a id="mailGo" href="${esc(mailtoHref(email,R))}"><button class="pri" type="button">📧 שליחת סיכום להורה</button></a><button id="mailLater" type="button">אחר כך</button></div>`;
   const inp=document.getElementById('mailIn'); if(inp) inp.addEventListener('input',()=>{ const e=inp.value.trim(); if(e){ lsSet('rh_parent_email',e); document.getElementById('mailGo').href=mailtoHref(e,R); } });
@@ -11532,6 +11534,7 @@ html.tm-locked .nv-par,html.tm-locked #parentBtn2,html.tm-locked #gateParent{dis
      באייפון האפליקציה רק "ממשיכה" מהרקע, ולכן מחזירים למסך הבית אחרי דקה ברקע (קפיצה קצרה לוואטסאפ לא מפריעה). */
   function goHome(){
     if(lock()) return;
+    try{ if(typeof mailTimer!=='undefined'&&mailTimer){ clearTimeout(mailTimer); mailTimer=null; } }catch(e){}
     try{ window.tmSwitchKid&&window.tmSwitchKid(); }catch(e){}
     document.querySelectorAll('[id$="Ov"].show, .tx-ov.show, .ov.show').forEach(o=>{
       o.querySelectorAll('iframe').forEach(f=>{ try{ f.src='about:blank'; }catch(e){} });
@@ -11555,6 +11558,8 @@ html.tm-locked .nv-par,html.tm-locked #parentBtn2,html.tm-locked #gateParent{dis
     if(away&&!pick&&Date.now()-away>=2000) goHome(); away=0;
   });
   addEventListener('pageshow',e=>{ if(e.persisted) goHome(); });
+  /* 22.11.2026: גיבוי לאייפון — גם pagehide נחשב יציאה */
+  addEventListener('pagehide',()=>{ if(!away) away=Date.now(); });
 })();
 </script>
 </body></html>
@@ -12891,7 +12896,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"roni-torah1","pid
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611201730';
+  const TM_BUILD='202611220930';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -16001,12 +16006,21 @@ function __dadDelPatch(){
   /* 12.11.2026: מי שכבר הפעילה תזכורות — עוברת למפתח החדש בלי ללחוץ שוב */
   async function pushRenew(){
     if(!pushOK()||Notification.permission!=='granted'||lg('tm_push_k')===VAPID) return;
-    const L=KIDS.concat(['parent']).filter(w=>lg(subKey(w)));
+    const L=(lg('tm_lock')?KIDS.concat(['parent']):['parent']).filter(w=>lg(subKey(w)));
     if(!L.length) return;
     if(!db()){ setTimeout(pushRenew,5000); return; }
     for(const w of L){ try{ await subscribe(w,false); }catch(e){} }
   }
   setTimeout(pushRenew,6000);
+  /* 22.11.2026 (בקשת אבא): טלפון של הורים שנרשם בטעות כילדה (כשנכנס לחומר שלה) — מוחקים את הרישום הזה,
+     כדי שלא יגיעו אליו התראות של הבנות. התזכורות של ההורה ('parent') נשארות. */
+  async function parentCleanup(){
+    if(lg('tm_lock')) return;
+    const L=KIDS.filter(w=>lg(subKey(w))); if(!L.length) return;
+    const D=db(); if(!D){ setTimeout(parentCleanup,5000); return; }
+    for(const w of L){ try{ await D.doc('push/'+lg(subKey(w))).delete(); localStorage.removeItem(subKey(w)); }catch(e){} }
+  }
+  setTimeout(parentCleanup,7000);
   /* 14.11.2026 (אושר): באנר בראש המסך של כל ילדה שהתזכורות שלה כבויות.
      • אפשר להפעיל → "🔔 להפעיל תזכורות" (לחיצה אחת).
      • אייפון שהאפליקציה לא במסך הבית → "📲 להוסיף למסך הבית" + הסבר קצר (באייפון אין תזכורות בלי זה).
@@ -16021,6 +16035,8 @@ function __dadDelPatch(){
   function pushBtn(){
     const P=prof(), hb=$('hubBox'); if(!P||!hb||!KIDS.includes(P.id)) return;
     let b=$('tmPushBtn');
+    /* 22.11.2026: בטלפון של הורים לא נרשמים כילדה ולא מציגים לה באנר תזכורות */
+    if(!lg('tm_lock')){ if(b) b.remove(); return; }
     const snoozed=+(lg('tm_push_no_'+P.id)||0); const sleeping=snoozed>1&&Date.now()-snoozed<PUSH_SNOOZE;
     const granted=pushOK()&&Notification.permission==='granted';
     if(granted&&lg(subKey(P.id))) pushHeal(P.id).catch(()=>{});
