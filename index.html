@@ -7206,6 +7206,16 @@ if(!lsGet('rh_seed_hili_geo_1117')){ if(!DATES['up-hili-geo1']){ DATES['up-hili-
   if(!('up-hili-geo1' in cur)) await dateSet('up-hili-geo1','2026-11-17');
   lsSet('rh_seed_hili_geo_cloud','1');
 }catch(e){} })();
+/* הכתבה באנגלית של זיו — יום רביעי 25.11.2026 (במכשיר, וגם בענן — בשביל התזכורות) */
+if(!lsGet('rh_seed_ziv_dict_1125')){ if(!DATES['dict-ziv-20261124']){ DATES['dict-ziv-20261124']='2026-11-25'; dSetLocal(DATES); } lsSet('rh_seed_ziv_dict_1125','1'); }
+(async function(){ try{
+  if(lsGet('rh_seed_ziv_dict_cloud')) return;
+  for(let i=0;i<60&&!(typeof DB!=='undefined'&&DB);i++) await new Promise(r=>setTimeout(r,500));
+  if(!(typeof DB!=='undefined'&&DB)) return;
+  const s=await DB.doc('meta/examDates').get(); const cur=(s.exists&&(s.data()||{}).dates)||{};
+  if(!('dict-ziv-20261124' in cur)) await dateSet('dict-ziv-20261124','2026-11-25');
+  lsSet('rh_seed_ziv_dict_cloud','1');
+}catch(e){} })();
 async function datesPull(){
   if(!DB) return false;
   try{ const s=await DB.doc('meta/examDates').get(); if(s.exists){ const d=(s.data()||{}).dates||{}; DATES=Object.assign({},DATES,d); Object.keys(DATES).forEach(k=>{ if(!DATES[k]) delete DATES[k]; }); dSetLocal(DATES); } return true; }catch(e){ return false; }
