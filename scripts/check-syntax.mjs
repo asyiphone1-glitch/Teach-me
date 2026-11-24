@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const HTML = ['index.html', 'dictation.html', 'kefel.html', 'import.html'];
-const JS = ['sw.js', 'firebase-bridge.js', 't3d.js', 'tm-err.js', 'tm-voice.js', 'tm-tutor.js'];
+const JS = ['sw.js', 'firebase-bridge.js', 't3d.js', 'tm-err.js', 'tm-voice.js', 'tm-tutor.js', 'tm-play.js'];
 const MJS = ['scripts/remind.mjs'];
 let bad = 0, n = 0;
 

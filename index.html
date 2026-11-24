@@ -8130,7 +8130,7 @@ window.TM_LOOK={
       return {pid,ms,n,days:days.size};
     }).sort((a,b)=>b.n-a.n||b.ms-a.ms));
   }
-  window.TM_WK={row:pid=>standings(weekStart(Date.now())).find(r=>r.pid===pid)};
+  window.TM_WK={row:pid=>standings(weekStart(Date.now())).find(r=>r.pid===pid),st:standings,ws:weekStart};   /* st/ws — 24.11: שיא אישי ⬆️ */
   /* 15.11.2026 (אושר): מי שלא ענתה על אף שאלה לא מקבלת מקום, מדליה, פרס או הכרזה בטקס */
   function gIdx(L){ let g=0; L.forEach(r=>{ if(r) r.gi=(r.pid&&r.pid!=='dad'&&(r.n||0)>0)?g++:null; }); return L; }
   function prizeOf(i,r){ if(!r||!r.pid||r.pid==='dad'||!((r.n||0)>0)) return 0; const k=r.gi!=null?r.gi:i; return k<3&&(r.n||0)>=MIN_Q_FOR_PRIZE?PRIZE[k]:0; }
@@ -9443,17 +9443,29 @@ window.TM_LOOK={
   function pCount(pid){ const M=new Map(); allLog(pid).forEach(e=>{ if(e.g==='explain'&&!e.ok) return; const d=d0(e.t); M.set(d,(M.get(d)||0)+1); }); return M; }
   function pDays(pid){ return new Set(pCount(pid).keys()); }
   function needOn(d){ return d<ST_FROM?1:ST_MIN; }
+  /* 24.11.2026 (מחקר עולמי, אושר — ד״ר נועה): 🌴 יום חופש אחד בכל שבוע נשמר לבד, ו-❄️ יום בלי בחינה בטווח 30 יום קופא (לא נספר ולא שובר). */
+  function stFrozen(pid){
+    let L=[]; try{ L=(EXAMS[pid]||[]); }catch(e){}
+    const dated=[], undated=L.some(x=>{ try{ return !isArch(x)&&!DATES[x.id]; }catch(e){ return false; } });
+    L.forEach(x=>{ try{ const v=DATES[x.id]; if(!v) return; const [y,m,dd]=v.split('-').map(Number); dated.push(new Date(y,m-1,dd).getTime()); }catch(e){} });
+    return d=>!undated&&!dated.some(t=>t>=d&&t-d<=30*864e5);
+  }
+  const wk0=t=>{ const x=new Date(d0(t)); x.setDate(x.getDate()-x.getDay()); return x.getTime(); };
   function stInfo(pid){
-    const M=pCount(pid), t=today0(), r={run:0,stars:0,shield:0,today:M.get(t)||0,need:ST_MIN,lost:null,saved:null};
+    const M=pCount(pid), t=today0(), r={run:0,stars:0,shield:0,today:M.get(t)||0,need:ST_MIN,lost:null,saved:null,free:1,freeDay:null};
     if(!M.size) return r;
+    const frz=stFrozen(pid); let wk=-1;
     let d=Math.min(...M.keys());
     for(let i=0;i<800&&d<=t;i++,d=addD(d,1)){
       if(new Date(d).getDay()===6) continue;
+      if(wk0(d)!==wk){ wk=wk0(d); r.free=1; r.freeDay=null; }
       const n=M.get(d)||0;
       if(n>=needOn(d)){ r.run++; r.stars+=Math.min(r.run,ST_MAXDAY); if(r.run%7===0) r.shield=1; }
       else if(d===t){ /* היום עוד לא נגמר */ }
       else if(r.run>0){
-        if(r.shield){ r.shield=0; r.saved={day:d}; }
+        if(frz(d)){ /* ❄️ אין בחינה — הרצף קופא */ }
+        else if(r.free){ r.free=0; r.freeDay=d; }
+        else if(r.shield){ r.shield=0; r.saved={day:d}; }
         else { r.lost={day:d,run:r.run,stars:r.stars}; r.run=0; r.stars=0; }
       }
     }
@@ -9469,7 +9481,7 @@ window.TM_LOOK={
   /* הפס של הרצף במסך המקצועות */
   function stBar(pid){
     const I=stInfo(pid), left=Math.max(0,ST_MIN-I.today), h=new Date().getHours(), sat=new Date().getDay()===6;
-    const late=!sat&&left>0&&h>=17&&I.run>0;
+    const late=!sat&&left>0&&h>=17&&I.run>0&&!I.free;   /* 24.11: יש יום חופש השבוע — אין אזהרה */
     const pct=Math.min(100,Math.round(I.today/ST_MIN*100));
     let msg;
     if(sat) msg='🕯️ שבת — הרצף שלך שמור';
@@ -9478,7 +9490,8 @@ window.TM_LOOK={
     else msg='היום: '+I.today+' מתוך '+ST_MIN+' שאלות';
     return '<div class="st-bar'+(late?' late':'')+(!left||sat?' ok':'')+'">'+
       '<div class="st-top"><span class="st-fire">🔥 <b>'+I.run+'</b></span><span class="st-stars">⭐ <b>'+I.stars+'</b></span>'+
-      '<span class="st-sh'+(I.shield?' on':'')+'" title="מגן רצף">🛡️'+(I.shield?'':'<small>'+(7-(I.run%7))+'</small>')+'</span></div>'+
+      '<span class="st-sh'+(I.shield?' on':'')+'" title="מגן רצף">🛡️'+(I.shield?'':'<small>'+(7-(I.run%7))+'</small>')+'</span>'+
+      '<span class="st-sh'+(I.free?' on':'')+'" title="יום חופש השבוע">🌴'+(I.free?'':'<small>✓</small>')+'</span></div>'+
       '<div class="st-msg">'+msg+'</div>'+(sat?'':'<div class="st-prog"><i style="width:'+pct+'%"></i></div>')+'</div>';
   }
   /* הודעה פעם אחת: הרצף נשבר / המגן הציל */
@@ -11751,7 +11764,7 @@ button:not(:disabled):active{filter:brightness(.93);}
   function mastery(pid,ex){
     const by={}; examEntries(pid,ex).forEach(e=>{ const t=normTp(e.tp); (by[t]=by[t]||[]).push(e); });
     const base=topicsOf(pid,ex), names=base.concat(Object.keys(by).filter(t=>!base.includes(t)&&t!=='כללי'));
-    const rows=names.map(t=>({t,lv:level(by[t]),n:(by[t]||[]).length}));
+    const rows=names.map(t=>({t,lv:level(by[t]),n:(by[t]||[]).length,od:new Set((by[t]||[]).filter(e=>e.ok).map(e=>dk(e.t))).size}));   /* od = בכמה ימים שונים ענתה נכון (24.11: לאלבום) */
     const cnt=[0,0,0,0]; rows.forEach(r=>cnt[r.lv]++);
     return {rows,cnt};
   }
@@ -12943,7 +12956,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"roni-torah1","pid
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611242230';
+  const TM_BUILD='202611250000';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -13551,8 +13564,9 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"roni-torah1","pid
   let AV={}; try{ AV=JSON.parse(lg('tm_av')||'{}')||{}; }catch(e){}
   sub('avatar',L=>{ L.forEach(a=>{ if(a.pid){ const cur=AV[a.pid]; if(!cur||(a.at||0)>=(cur.at||0)) AV[a.pid]=a; } }); ls('tm_av',JSON.stringify(AV)); paintPodium(); try{ dressAll(); }catch(e){} });
   const avOf=pid=>Object.assign({own:[],wear:{},spent:0},AV[pid]||{});
-  function earned(pid){ let n=0; logOf(pid).forEach(e=>{ if(e.ok&&e.t>=AV_FROM&&e.g!=='pre') n++; }); return n; }
+  function earned(pid){ let n=0; logOf(pid).forEach(e=>{ if(e.ok&&e.t>=AV_FROM&&e.g!=='pre') n+=1+Math.max(0,Math.min(5,+e.bp||0)); }); return n+Math.max(0,+avOf(pid).gift||0); }   /* 24.11: bp = בונוס קומבו/שעה כפולה, gift = מתיבת הפתעה */
   const bal=pid=>Math.max(0,earned(pid)-(avOf(pid).spent||0));
+  window.TM_AVX={avOf:p=>avOf(p),save:(p,a)=>saveAv(p,a),bal:p=>bal(p),items:()=>ITEM,shop:()=>SHOP,ward:p=>!!WARD[p],isCloth:k=>isCloth(k),dress:p=>dress(p)};   /* 24.11: לתיבת ההפתעה ולאלבום */
   /* אביזרים על הדמות. יחידות: H = גובה הדמות, W = רוחב, (0,0) = בין הרגליים */
   function accList(pid){ const w=avOf(pid).wear||{}; return ['bg','pet','hand','head'].map(k=>w[k]&&ITEM[w[k]]).filter(Boolean); }
   function accPos(it,W,H){
@@ -17208,5 +17222,6 @@ html:has(#tmSj.show),html:has(#tmSj.show) body{overflow:hidden;}
 })();
 </script>
 
+<script src="tm-play.js"></script>
 <script src="tm-tutor.js"></script>
 </body></html>
