@@ -1831,11 +1831,31 @@ const WORDS_AVIV_UNIT1 = [
   { en:"thing",       he:"דבר / חפץ",         icon:"📦" },
   { en:"village",     he:"כפר",               icon:"🏘️" }
 ];
+/* 24.11.2026: Ziv's third dictation list ("Vocabulary", 17 words) — the current list. Her earlier lists move to her archive. */
+const WORDS_ZIV_3 = [
+  { en:"aid", he:"סיוע", icon:"🩹" },
+  { en:"award", he:"להעניק פרס", icon:"🏆" },
+  { en:"category", he:"קטגוריה", icon:"🗂️" },
+  { en:"charity", he:"צדקה", icon:"💝" },
+  { en:"diploma", he:"תעודה, דיפלומה", icon:"📜" },
+  { en:"equipment", he:"ציוד", icon:"🎒" },
+  { en:"finish", he:"סיום", icon:"🏁" },
+  { en:"form", he:"ליצור, להיווצר", icon:"🧱" },
+  { en:"league", he:"ליגה", icon:"⚽" },
+  { en:"level", he:"שלב, רמה", icon:"📶" },
+  { en:"match", he:"גפרור, משחק, תחרות", icon:"🔥" },
+  { en:"patient", he:"מטופל", icon:"🏥" },
+  { en:"point", he:"נקודה", icon:"📍" },
+  { en:"post", he:"להעלות פוסט", icon:"📲" },
+  { en:"shoot", he:"לצלם, לקלוע", icon:"📸" },
+  { en:"strongly", he:"מאוד, בעוצמה", icon:"💪" },
+  { en:"virus", he:"וירוס", icon:"🦠" }
+];
 const PROFILES = {
   'אביב': { current: WORDS_AVIV_UNIT1, archive: ARCHIVE_WORDS_AVIV.concat(CURRENT_WORDS, WORDS_AVIV_NEW, WORDS_AVIV_NEWEST).filter((w,i,a)=>!WORDS_AVIV_UNIT1.some(c=>c.en===w.en)&&a.findIndex(x=>x.en===w.en)===i) },
   'רוני': { current: WORDS_RONI_HILI_2, archive: WORDS_RONI_ELI },
   'הילי': { current: WORDS_RONI_HILI_2, archive: WORDS_RONI_ELI },
-  'זיו':  { current: WORDS_ZIV_2, archive: WORDS_ZIV },
+  'זיו':  { current: WORDS_ZIV_3, archive: WORDS_ZIV_2.concat(WORDS_ZIV).filter((w,i,a)=>!WORDS_ZIV_3.some(c=>c.en===w.en)&&a.findIndex(x=>x.en===w.en)===i) },
   /* 4.11.2026: אבא — המילים מגיעות מ-teach-me (שאבא מוסיף), דרך w= */
   'אבא':  { current: [], archive: [] }
 };
@@ -4605,7 +4625,24 @@ const FC_TIPS = {
   "phrase":"פְרֵייז — ביטוי, כמו \"פְרָזָה\"",
   "relatively":"relative = יחסי → relatively = באופן יחסי",
   "to be honest":"honest = כן, ישר → \"למען האמת\"",
-  "understanding":"under + stand → understand = להבין → הבנה"
+  "understanding":"under + stand → understand = להבין → הבנה",
+  "aid":"אֵייד — סיוע, כמו \"first aid\" = עזרה ראשונה 🩹",
+  "award":"אַוֹורְד — פרס. \"a war\" + d: מי שניצח במלחמה מקבל פרס 🏆",
+  "category":"קָטֶגוֹרִי — כמעט כמו בעברית! שימי לב: cat-E-gory (לא a)",
+  "charity":"צֶ׳רִיטִי — צדקה. מתחיל כמו \"chair\": נותנים כיסא למי שצריך 💝",
+  "diploma":"דִיפְּלוֹמָה — כמו בעברית, תעודה בסוף הלימודים 📜",
+  "equipment":"אִיקְוִויפְּמֶנְט — ציוד. equip = לצייד, ment = שם עצם",
+  "finish":"פִינִישׁ — סיום. fin = סוף (כמו \"פיניש\" בריצה) 🏁",
+  "form":"פוֹרְם — ליצור צורה. form = צורה → ליצור, להיווצר",
+  "league":"לִיג — ליגה. שימי לב לסוף: lea-GUE (ה-ue שקט)",
+  "level":"לֶבֶל — שלב/רמה. נקרא אותו דבר משני הצדדים: l-e-v-e-l",
+  "match":"מֶאצ׳ — גפרור 🔥 וגם משחק ⚽: \"המשחק בוער!\"",
+  "patient":"פֵּיישֶׁנְט — מטופל אצל רופא 🏥 (וגם: סבלני)",
+  "point":"פּוֹיְנְט — נקודה. pointing = מצביעים על נקודה 👉",
+  "post":"פּוֹסְט — להעלות פוסט, בדיוק כמו בעברית 📲",
+  "shoot":"שׁוּט — לצלם 📸 וגם לקלוע לסל 🏀. שתי o באמצע",
+  "strongly":"strong = חזק → strongly = בעוצמה, מאוד 💪",
+  "virus":"וַיְרוּס — כמו בעברית, רק עם v ו-i 🦠"
 };
 
 let FC = { list:[], i:0, known:[], unknown:[], busy:false, timer:null, dir:'he', rep:[], n:0 };
