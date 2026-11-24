@@ -3910,7 +3910,8 @@ function selectDay(i,btn){
   document.getElementById('dayCard').innerHTML=`<h3>${arr[i].title}</h3><p>${arr[i].body}</p>`;
 }
 loadDays();
-try{ const lp=lsGet('rh_profile'); if(lp&&PROFILES[lp]) setProfile(lp); }catch(e){}
+/* 24.11.2026 (בקשת אבא): בטלפון של הורים (לא נעול) כל פתיחה מתחילה במסך של כל הבנות — לא חוזרים לילדה האחרונה. רק טלפון נעול חוזר לילדה שלו. */
+try{ const lp=lsGet('rh_profile'); let lk=null; try{ lk=localStorage.getItem('tm_lock'); }catch(e){} if(lp&&PROFILES[lp]&&lk===lp) setProfile(lp); }catch(e){}
 
 /* ================= שיעור מונפש: פרופסור ינשופי ושבלולון ================= */
 /* כל פרק = סצנות. סצנה = p (מה מופיע על המסך) + ln (שורות דיבור: o=ינשופי, s=שבלולון, ופעולה אופציונלית: jump/shake/spin/dizzy).
@@ -12942,7 +12943,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"roni-torah1","pid
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611242045';
+  const TM_BUILD='202611242230';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
