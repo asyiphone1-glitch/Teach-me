@@ -414,7 +414,8 @@ html.tm-dark .al-c,body.tm-dark .al-c{color:#2E2450;}
     const z=new Set(zooOf(pid).map(a=>a.ex));
     return actEx(pid).filter(x=>x.subj!=='dict'&&!z.has(x.id)).map(ex=>({ex,p:TM_READY.pct(pid,ex)})).filter(e=>e.p!=null);
   }
-  const eggE=p=>p>=67?'🐣':'🥚';
+  const HATCH=80;   /* 25.11: ההורה ביקש להוריד מ-100% ל-80% מוכנות */
+  const eggE=p=>p>=Math.round(HATCH*2/3)?'🐣':'🥚';
   function animalFor(pid,exId){
     const have=new Set(zooOf(pid).map(a=>a.a)); const L=ANIMALS.filter(a=>!have.has(a[0])); const P=L.length?L:ANIMALS;
     return P[hash(exId)%P.length];
@@ -422,7 +423,7 @@ html.tm-dark .al-c,body.tm-dark .al-c{color:#2E2450;}
   let hatching=false;
   async function hatchCheck(pid){
     if(hatching||KIDS.indexOf(pid)<0||!window.TM_AVX||$('tmChest')||$('tmCel')) return;
-    const e=eggsOf(pid).find(x=>x.p>=100); if(!e) return;
+    const e=eggsOf(pid).find(x=>x.p>=HATCH); if(!e) return;
     hatching=true;
     const an=animalFor(pid,e.ex.id);
     const A=TM_AVX.avOf(pid); A.own=(A.own||[]).slice(); A.wear=Object.assign({},A.wear||{});
@@ -437,8 +438,8 @@ html.tm-dark .al-c,body.tm-dark .al-c{color:#2E2450;}
     const P=prof(); if(!P||!S().open) return; const pid=P.id;
     S().open(); const box=$('txIn'); if(!box) return; box.dataset.v='';
     const eg=eggsOf(pid), z=zooOf(pid);
-    let h=S().bar('🐾 גן החיות שלי')+'<div class="tx-card"><p class="tx-note" style="text-align:center;margin:0">כל סבב מחמם את הביצה. ב-100% מוכנה היא בוקעת! 🐣</p>';
-    eg.forEach(e=>{ h+='<div class="zo-egg"><span class="e">'+eggE(e.p)+'</span><span class="b">'+E(exName(e.ex))+' · '+e.p+'%<div class="zo-bar"><i style="width:'+Math.min(100,e.p)+'%"></i></div></span></div>'; });
+    let h=S().bar('🐾 גן החיות שלי')+'<div class="tx-card"><p class="tx-note" style="text-align:center;margin:0">כל סבב מחמם את הביצה. ב-'+HATCH+'% מוכנה היא בוקעת! 🐣</p>';
+    eg.forEach(e=>{ h+='<div class="zo-egg"><span class="e">'+eggE(e.p)+'</span><span class="b">'+E(exName(e.ex))+' · '+e.p+'%<div class="zo-bar"><i style="width:'+Math.min(100,Math.round(e.p*100/HATCH))+'%"></i></div></span></div>'; });
     if(z.length) h+='<div class="al-ex"><span>החיות שלי</span><small>'+z.length+'</small></div><div class="zo-grid">'+z.map(a=>'<div class="zo-an"><span class="e">'+a.a+'</span>'+E(a.n)+'<br><small>'+E(a.s||'')+'</small></div>').join('')+'</div>';
     else if(!eg.length) h+='<p style="text-align:center;margin:18px 0">כשתיפתח בחינה חדשה תקבלי ביצה 🥚</p>';
     box.innerHTML=h+'</div>'; S().wireBar();
@@ -597,7 +598,7 @@ html.tm-dark .al-c,body.tm-dark .al-c{color:#2E2450;}
     if(KIDS.indexOf(pid)<0) return '';
     let h='';
     const eg=eggsOf(pid);
-    if(eg.length) h+='<button type="button" class="tp-chip egg" id="tpEgg"><span class="i">'+eggE(Math.max(...eg.map(e=>e.p)))+'</span><span>הביצים שלי · '+eg.map(e=>{ const s=subjOf(e.ex); return (s?s.i:'')+' '+e.p+'%'; }).join(' · ')+'<small>ב-100% מוכנה הביצה בוקעת</small></span></button>';
+    if(eg.length) h+='<button type="button" class="tp-chip egg" id="tpEgg"><span class="i">'+eggE(Math.max(...eg.map(e=>e.p)))+'</span><span>הביצים שלי · '+eg.map(e=>{ const s=subjOf(e.ex); return (s?s.i:'')+' '+e.p+'%'; }).join(' · ')+'<small>ב-'+HATCH+'% מוכנה הביצה בוקעת</small></span></button>';
     if(sisC.k!==pid||Date.now()-sisC.t>60000) sisC={k:pid,t:Date.now(),v:sisNews(pid)};
     if(sisC.v) h+='<div class="tp-chip sis"><span class="i">📣</span><span>'+E(sisC.v)+'</span></div>';
     setTimeout(()=>hatchCheck(pid),900);
