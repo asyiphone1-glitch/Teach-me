@@ -14,7 +14,7 @@ const VAPID_PRIV=(process.env.VAPID_PRIVATE||'').trim().replace(/^["']+|["']+$/g
 const APP='https://asyiphone1-glitch.github.io/Teach-me/';
 const KIDS=[['ziv','זיו'],['roni','רוני'],['hili','הילי'],['aviv','אביב']];
 const NM=Object.fromEntries(KIDS);
-const SUBJ={math:'חשבון',torah:'תורה',oral:'תושב״ע',lit:'ספרות',eng:'אנגלית',heb:'עברית',hist:'היסטוריה',geo:'גיאוגרפיה',dict:'הכתבה'};
+const SUBJ={math:'חשבון',torah:'תורה',oral:'תושב״ע',lit:'ספרות',eng:'אנגלית',heb:'עברית',hist:'היסטוריה',geo:'גיאוגרפיה',sci:'מדעים',dict:'הכתבה'};
 const FORCE=process.env.FORCE==='1';
 if(!VAPID_PRIV){ console.log('אין VAPID_PRIVATE'); process.exit(0); }
 webpush.setVapidDetails(APP,VAPID_PUB,VAPID_PRIV);

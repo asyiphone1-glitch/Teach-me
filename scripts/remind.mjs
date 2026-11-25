@@ -10,7 +10,7 @@ const VAPID_PUB='BAir7yGUBVlVC1zIl4vAuEKWfqRUzGUB85vECJYelmTey4F-zq8DifRc7Py_KSp
 const VAPID_PRIV=(process.env.VAPID_PRIVATE||'').trim().replace(/^["']+|["']+$/g,'');
 const APP='https://asyiphone1-glitch.github.io/Teach-me/';
 const NM={aviv:'אביב',roni:'רוני',hili:'הילי',ziv:'זיו'};
-const SUBJ={math:'חשבון',torah:'תורה',oral:'תושב״ע',lit:'ספרות',eng:'אנגלית',heb:'עברית',hist:'היסטוריה',geo:'גיאוגרפיה'};
+const SUBJ={math:'חשבון',torah:'תורה',oral:'תושב״ע',lit:'ספרות',eng:'אנגלית',heb:'עברית',hist:'היסטוריה',geo:'גיאוגרפיה',sci:'מדעים'};
 if(!VAPID_PRIV){ console.log('אין VAPID_PRIVATE — צריך להוסיף אותו ב-Secrets של המאגר'); process.exit(0); }
 webpush.setVapidDetails(APP,VAPID_PUB,VAPID_PRIV);
 
