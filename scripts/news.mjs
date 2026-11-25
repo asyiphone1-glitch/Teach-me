@@ -59,6 +59,24 @@ function builtin(){
 const hourIL=()=>+new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',hour12:false}).format(new Date());
 
 await signIn();
+// 💝 חנות ההורים (24.11.2026, אושר): ילדה קנתה פרס → התראה לטלפון של ההורים (לא בין 21:00 ל-07:00). זוכר ב-meta/shopSent.
+try{
+  const reqs=(await listCol('shop')).filter(r=>r.kind==='req'&&r.st==='wait'&&NM[r.pid]);
+  const ps=await getDoc('meta/shopSent'), ss=(ps&&ps.sent)||{};
+  const nw=reqs.filter(r=>!ss[r.id]), h0=hourIL();
+  if(nw.length&&h0>=7&&h0<21){
+    const par=(await listCol('push')).filter(s=>s.sub&&s.sub.endpoint&&s.who==='parent');
+    for(const r of nw){
+      ss[r.id]=1;
+      for(const s of par){
+        try{ await webpush.sendNotification(s.sub,JSON.stringify({title:'💝 '+NM[r.pid]+' קנתה בחנות ההורים',body:((r.e||'')+' '+(r.n||'')).trim()+' · '+r.c+' 💎 — לאשר באפליקציה',url:APP,tag:'tm-shop-'+r.id})); }
+        catch(e){ console.log('shop send error',e.statusCode||e.message); }
+      }
+    }
+    await putDoc('meta/shopSent',{sent:ss});
+    console.log('shop requests notified',nw.length);
+  }
+}catch(e){ console.log('shop check failed',e.message); }
 const recs=new Map();
 for(const r of [...await listCol('uploads'),...builtin()]){
   if(!r||!r.id||!NM[r.pid]||r.st!=='ready'||r.hide) continue;
