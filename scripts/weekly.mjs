@@ -14,7 +14,7 @@ const VAPID_PRIV=(process.env.VAPID_PRIVATE||'').trim().replace(/^["']+|["']+$/g
 const APP='https://asyiphone1-glitch.github.io/Teach-me/';
 const KIDS=[['ziv','זיו'],['roni','רוני'],['hili','הילי'],['aviv','אביב']];
 const NM=Object.fromEntries(KIDS);
-const SUBJ={math:'חשבון',torah:'תורה',lit:'ספרות',eng:'אנגלית',heb:'עברית',hist:'היסטוריה',geo:'גיאוגרפיה',dict:'הכתבה'};
+const SUBJ={math:'חשבון',torah:'תורה',oral:'תושב״ע',lit:'ספרות',eng:'אנגלית',heb:'עברית',hist:'היסטוריה',geo:'גיאוגרפיה',dict:'הכתבה'};
 const FORCE=process.env.FORCE==='1';
 if(!VAPID_PRIV){ console.log('אין VAPID_PRIVATE'); process.exit(0); }
 webpush.setVapidDetails(APP,VAPID_PUB,VAPID_PRIV);
@@ -83,7 +83,7 @@ let next=null;
 for(const [id,d] of Object.entries(dates)){
   if(!d||d<now.day||arch[id]===1||ended[id]) continue;
   const info=names[id]||{}; const pid=info.pid||id.replace(/^up-/,'').split('-')[0]; if(!NM[pid]) continue;
-  const parts=id.replace(/^up-/,'').split('-'); const sn=info.n||SUBJ[parts[1]]||SUBJ[(parts[1]||'').replace(/\d+$/,'')]||'';
+  const parts=id.replace(/^up-/,'').split('-'); if(/^up-(roni|hili|ziv)-torah1$/.test(id)) parts[1]='oral'; /* בחינות תושב״ע שנוספו לפני 25.11 */ const sn=info.n||SUBJ[parts[1]]||SUBJ[(parts[1]||'').replace(/\d+$/,'')]||'';
   if(!next||d<next.d) next={d,pid,sn};
 }
 const title='📊 השבוע ב-teach-me';

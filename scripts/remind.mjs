@@ -10,7 +10,7 @@ const VAPID_PUB='BAir7yGUBVlVC1zIl4vAuEKWfqRUzGUB85vECJYelmTey4F-zq8DifRc7Py_KSp
 const VAPID_PRIV=(process.env.VAPID_PRIVATE||'').trim().replace(/^["']+|["']+$/g,'');
 const APP='https://asyiphone1-glitch.github.io/Teach-me/';
 const NM={aviv:'אביב',roni:'רוני',hili:'הילי',ziv:'זיו'};
-const SUBJ={math:'חשבון',torah:'תורה',lit:'ספרות',eng:'אנגלית',heb:'עברית',hist:'היסטוריה',geo:'גיאוגרפיה'};
+const SUBJ={math:'חשבון',torah:'תורה',oral:'תושב״ע',lit:'ספרות',eng:'אנגלית',heb:'עברית',hist:'היסטוריה',geo:'גיאוגרפיה'};
 if(!VAPID_PRIV){ console.log('אין VAPID_PRIVATE — צריך להוסיף אותו ב-Secrets של המאגר'); process.exit(0); }
 webpush.setVapidDetails(APP,VAPID_PUB,VAPID_PRIV);
 
@@ -64,7 +64,7 @@ for(const [id,d] of Object.entries(dates)){
   if(!d||arch[id]===1||ended[id]) continue;
   const info=names[id]||{}; const pid=info.pid||id.replace(/^up-/,'').split('-')[0];
   if(!NM[pid]) continue;
-  const parts=id.replace(/^up-/,'').split('-'); const sn=info.n||SUBJ[parts[1]]||SUBJ[(parts[1]||'').replace(/\d+$/,'')]||'';
+  const parts=id.replace(/^up-/,'').split('-'); if(/^up-(roni|hili|ziv)-torah1$/.test(id)) parts[1]='oral'; /* בחינות תושב״ע שנוספו לפני 25.11 */ const sn=info.n||SUBJ[parts[1]]||SUBJ[(parts[1]||'').replace(/\d+$/,'')]||'';
   const what=sn?'בחינה ב'+sn:'בחינה';
   if(mode==='morning'&&d===day) msgs.push({pid,title:'🍀 בהצלחה '+NM[pid]+'!',body:'היום '+what+'. נושמות עמוק — את מוכנה!'});
   if(mode==='evening'&&d===addDays(day,1)) msgs.push({pid,title:'📚 מחר '+what,body:'עוד חזרה קטנה של 10 דקות?'});
