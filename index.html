@@ -6,6 +6,7 @@
 <!-- 8.11.2026: teach-me כאפליקציה עצמאית (GitHub Pages + Firebase) -->
 <script src="firebase-bridge.js"></script>
 <script src="tm-voice.js"></script>
+<script src="tm-tips.js"></script>
 <script>document.documentElement.classList.add('tm-standalone');</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -7652,7 +7653,8 @@ showHub=(function(prev){ return function(){
       p:'היום הבחינה ב'+s+'. למדת, תרגלת — את יודעת את החומר!',
       tip:'💡 נושמים עמוק, קוראים כל שאלה לאט, ומתחילים ממה שקל.',
       say:'בהצלחה '+P.name+'! היום הבחינה ב'+s+'. את יודעת את החומר. נושמים עמוק, וקוראים כל שאלה לאט.',
-      go:'🔥 חימום קצר (3 דק׳)', later:'תודה! 💖', conf:true};
+      go:'🔥 חימום קצר (3 דק׳)', later:'תודה! 💖', conf:true,
+      rh:(typeof window.tmLuck==='function')?window.tmLuck(o.pid,o.ex):null};
   }
   function say(t){
     try{
@@ -7687,11 +7689,11 @@ showHub=(function(prev){ return function(){
     const cs=getComputedStyle(document.querySelector('.gate-btn[data-p="'+o.pid+'"]')||document.body);
     ['--acc','--acc-fg','--acc-soft'].forEach(k=>{ const v=cs.getPropertyValue(k); if(v) box.style.setProperty(k,v.trim()); });
     box.innerHTML='<button type="button" class="rm-say" aria-label="להקשיב">🔊</button>'+
-      '<div class="rm-emo" aria-hidden="true">'+t.emo+'</div><h2 id="rmTitle">'+esc(t.h)+'</h2><p>'+esc(t.p)+'</p><div class="rm-tip">'+esc(t.tip)+'</div>'+
+      '<div class="rm-emo" aria-hidden="true">'+t.emo+'</div><h2 id="rmTitle">'+esc(t.h)+'</h2><p>'+esc(t.p)+'</p>'+(t.rh&&t.rh.html?t.rh.html:'')+'<div class="rm-tip">'+esc(t.tip)+'</div>'+
       '<div class="rm-row"><button type="button" class="pri" id="rmGo">'+t.go+'</button>'+(t.later?'<button type="button" id="rmLater">'+t.later+'</button>':'')+'</div>'+
       (left?'<div class="rm-more">יש עוד '+(left===1?'תזכורת אחת':left+' תזכורות')+'</div>':'');
     ov.classList.add('show');
-    box.querySelector('.rm-say').onclick=()=>say(t.say);
+    box.querySelector('.rm-say').onclick=()=>say(t.say+(t.rh&&t.rh.say?' '+t.rh.say:''));
     box.querySelector('#rmGo').onclick=()=>{
       close(o);
       if(o.st==='d0'){ try{ if(window.tmWarmup) window.tmWarmup(o.pid,o.ex.id); }catch(e){} return; }
@@ -12956,7 +12958,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"roni-torah1","pid
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611250000';
+  const TM_BUILD='202611250815';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -15881,7 +15883,7 @@ function __dadDelPatch(){
     if(!w){ w=document.createElement('div'); w.id='tmMorn'; hb.prepend(w); }
     const sig=ex.id+'|'+items.length; if(w.dataset.sig!==sig){
       w.dataset.sig=sig;
-      w.innerHTML='<div class="sun">☀️</div><h2>היום הבחינה ב'+E(subjName(ex))+'!</h2><p>בהצלחה '+E(P.name||'')+' 🍀</p>'+
+      w.innerHTML='<div class="sun">☀️</div><h2>היום הבחינה ב'+E(subjName(ex))+'!</h2><p>בהצלחה '+E(P.name||'')+' 🍀</p>'+((typeof window.tmLuck==='function'&&(window.tmLuck(P.id,ex)||{}).html)||'')+
         (items.length>=3?'<button type="button" class="go" id="mnGo">חזרה אחרונה<br><small style="font-size:1rem;font-weight:700">5 דקות · '+items.length+' דברים חשובים</small></button>':'')+
         '<button type="button" class="calm" id="mnCalm">🌬️ להירגע דקה</button>'+
         '<button type="button" class="skip" id="mnSkip">למסך הרגיל</button>';
@@ -17222,6 +17224,102 @@ html:has(#tmSj.show),html:has(#tmSj.show) body{overflow:hidden;}
 })();
 </script>
 
+<script>
+/* ===== 🍀 ברכת הצלחה עם חרוז (25.11.2026, אושר ע״י ההורה) =====
+   בבוקר הבחינה — בחלון "בהצלחה" ובמסך ☀️ של הבוקר:
+   1. שורת עידוד בחרוז (מתחלפת כל יום ולכל ילדה).
+   2. עד שני דברים קצרים לזכור — מה שהיא הכי טעתה בו בתרגול לבחינה הזאת (בהכתבה: 2 מילים + טריק, בשאר: שאלה + תשובה).
+   בלי שום כפתור חדש. */
+(function(){
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const OPEN=[
+    ['למדת יפה, תרגלת המון —','היום את עונה בביטחון! ⭐'],
+    ['אין שום סיבה לפחד —','כל מה שלמדת כבר בראש, אחת־אחת. 💪'],
+    ['נושמות עמוק, מחייכות, מתחילות —','את מוכנה, אלופה, לכל השאלות! 🏆'],
+    ['עבדת קשה, וזה ממש מורגש —','היום את נכנסת ונותנת בראש! 💥'],
+    ['החומר אצלך, והראש מוכן —','היום את עונה כמו אלופה, ברור ונכון! 🌟']
+  ];
+  const DW=[
+    ['ואם {W} תקפוץ פתאום —','זוכרים את הטריק של היום:'],
+    ['גם {W} מחכה לך בדף —','והנה הטריק, שתכתבי בכיף:'],
+    ['ו־{W}? כבר לא מבלבלת —','עם הטריק הזה את מנצחת:'],
+    ['{W} — היא כבר שלך,','והטריק הזה נשאר איתך:']
+  ];
+  const QW=[
+    ['ואם ישאלו אותך פתאום —','זה מה שזוכרים היום:'],
+    ['ועוד אחת קטנה לפני שנכנסים —','ככה עונים, כמו אלופים:']
+  ];
+  function hash(s){ let h=7; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
+  function logOf(pid){
+    const m=new Map();
+    let L=[]; try{ L=(typeof localE==='function'?localE(pid):[]); }catch(e){}
+    const C=(window.TM_CLOUD_E&&window.TM_CLOUD_E[pid])||[];
+    [L,C].forEach(a=>a.forEach(e=>{ if(!e) return; const k=e.u||('L'+e.t+'-'+e.id); if(!m.has(k)) m.set(k,e); }));
+    return [...m.values()];
+  }
+  function rank(groups){
+    return [...groups.values()].filter(g=>g.n>0).sort((a,b)=>(b.bad-a.bad)||((a.ok/a.n)-(b.ok/b.n))||(b.lastBad-a.lastBad));
+  }
+  function pick(pid,ex){
+    const all=logOf(pid), G=new Map();
+    const add=(k,e,extra)=>{ let g=G.get(k); if(!g){ g=Object.assign({n:0,ok:0,bad:0,lastBad:0},extra); G.set(k,g); }
+      g.n++; if(e.ok) g.ok++; else { g.bad++; g.lastBad=Math.max(g.lastBad,e.t||0); } };
+    if(ex.subj==='dict'){
+      const BI=(window.TM_DICT_BUILTIN||{})[pid];
+      const since=(BI&&BI.id===ex.id&&BI.at)?BI.at-12*3600e3:Date.now()-10*864e5;
+      all.forEach(e=>{ const x=String(e.x||''); if((e.t||0)<since) return;
+        const m=/^הכתבה: (.+?)(?: \((.+)\))?$/.exec(x); if(!m) return;
+        add(m[1].toLowerCase(),e,{en:m[1],he:m[2]||''}); });
+    } else {
+      all.forEach(e=>{ if(e.ex!==ex.id||!e.x||e.c==null) return; const x=String(e.x).trim(); if(/^הכתבה: /.test(x)) return;
+        add(x,e,{q:x,c:String(e.c)}); });
+    }
+    const R=rank(G), bad=R.filter(g=>g.bad>0);
+    /* קודם מה שטעתה בו; אם יש פחות משניים — מה שהכי פחות בטוח אצלה */
+    const out=bad.slice(0,2);
+    if(out.length<2) R.filter(g=>!g.bad&&g.n<3).slice(0,2-out.length).forEach(g=>out.push(g));
+    return out;
+  }
+  function cut(s,n){ s=String(s).replace(/\s+/g,' ').trim(); return s.length>n?s.slice(0,n-1)+'…':s; }
+  window.tmLuck=function(pid,ex){
+    try{
+      if(!ex) return null;
+      const day=new Date().toISOString().slice(0,10), h=hash(pid+day+ex.id);
+      const op=OPEN[h%OPEN.length];
+      let html='<div class="rm-rhyme"><div class="rr-open">'+esc(op[0])+'<br>'+esc(op[1])+'</div>';
+      let say=op[0].replace(/[—]/g,',')+' '+op[1].replace(/[^֐-׿\s,.!?־]/g,'');
+      const items=pick(pid,ex);
+      items.forEach((g,i)=>{
+        if(ex.subj==='dict'){
+          const t=DW[(h+i)%DW.length], W='<b dir="ltr">'+esc(g.en)+'</b>'+(g.he?' ('+esc(g.he)+')':'');
+          const tip=(window.FC_TIPS||{})[g.en]||(window.FC_TIPS||{})[g.en.toLowerCase()]||'';
+          html+='<div class="rr-it"><div>'+t[0].replace('{W}',W)+'<br>'+esc(t[1])+'</div>'+
+            (tip?'<div class="rr-tip">💡 '+esc(tip)+'</div>':'')+
+            '<div class="rr-sp" dir="ltr">✍️ '+esc(g.en.split('').join('-'))+'</div></div>';
+        } else {
+          const t=QW[i%QW.length], tf=/^(נכון|לא נכון)$/.test(g.c.trim());
+          html+='<div class="rr-it"><div>'+esc(t[0])+'<br>'+esc(t[1])+'</div>'+
+            '<div class="rr-q">❓ '+esc(cut(g.q,90))+'</div>'+
+            '<div class="rr-a">✅ '+esc(tf?(g.c.trim()==='נכון'?'זה נכון!':'זה לא נכון!'):cut(g.c,80))+'</div></div>';
+          say+=' '+t[0].replace('—',',')+' '+t[1]+' '+cut(g.q,90)+'. '+(tf?(g.c.trim()==='נכון'?'זה נכון':'זה לא נכון'):cut(g.c,80))+'.';
+        }
+      });
+      html+='</div>';
+      return {html,say,n:items.length};
+    }catch(e){ return null; }
+  };
+  const st=document.createElement('style');
+  st.textContent='.rm-rhyme{background:var(--acc-soft,#F3E9D6);border-radius:14px;padding:10px 12px;margin:10px 0 4px;text-align:center;line-height:1.5;font-size:.97rem}'+
+    '.rm-rhyme .rr-open{font-weight:700}'+
+    '.rm-rhyme .rr-it{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(0,0,0,.15)}'+
+    '.rm-rhyme .rr-tip{font-size:.9rem;margin-top:3px}'+
+    '.rm-rhyme .rr-sp{font-size:.92rem;font-weight:700;letter-spacing:.5px;margin-top:2px}'+
+    '.rm-rhyme .rr-q{font-size:.92rem;margin-top:3px}.rm-rhyme .rr-a{font-weight:700;margin-top:2px}'+
+    '#tmMorn .rm-rhyme{color:inherit;max-width:420px;margin-inline:auto}'+
+    '#rmBox{max-height:92vh;overflow-y:auto}';
+  document.head.appendChild(st);
+})();
+</script>
 <script src="tm-play.js"></script>
 <script src="tm-tutor.js"></script>
 </body></html>
