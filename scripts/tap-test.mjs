@@ -101,6 +101,8 @@ async function monkey(page, label, n, avoid) {
   }
 }
 async function tapSel(page, sel) {
+  // 27.11.2026: כפתורי המקצועות נמצאים בלשונית "בחינות" — כמו ילדה אמיתית, עוברים אליה קודם
+  if (/hub-sbtn|#hubDict/.test(sel)) await page.evaluate(() => { try { window.TM_TABS && TM_TABS.set('exams'); } catch (e) {} }).catch(() => {});
   const el = page.locator(sel).first();
   if (!(await el.count().catch(() => 0))) return false;
   await el.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
