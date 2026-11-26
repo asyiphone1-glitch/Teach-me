@@ -136,6 +136,7 @@ async function waitVis(page, sel, ms) {
 async function openPlanets(page) {
   for (let i = 0; i < 3; i++) {
     if (await waitVis(page, '[data-tmpl]', 1500)) return;
+    await page.evaluate(() => { try { window.TM_TABS && TM_TABS.set('exams'); } catch (e) {} }).catch(() => {});
     if (await waitVis(page, '.hub-sbtn[data-ex="up-hili-geo1"]', 1500)) {
       await tapSel(page, '.hub-sbtn[data-ex="up-hili-geo1"]:visible');
       await dismiss(page);
