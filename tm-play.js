@@ -360,7 +360,7 @@ html.tm-dark .al-c,body.tm-dark .al-c{color:#2E2450;}
 
   /* =========================================================
      ===== שלב ג׳ (24.11, אושר) =====
-     🐣 ביצה של בחינה · 📣 מה קורה אצל האחיות · 🏰 מצב מגדל · 💝 חנות ההורים
+     🐣 ביצה של בחינה · 📣 מה קורה אצל האחיות · 🌱 משהו שגדל בכל תרגול · 💝 חנות ההורים
      ========================================================= */
   const css2=document.createElement('style');
   css2.textContent=`
@@ -379,14 +379,19 @@ html.tm-dark .al-c,body.tm-dark .al-c{color:#2E2450;}
 #tmHatch h2{font-family:'Secular One','Heebo',sans-serif;font-size:1.7rem;margin:8px 0;}
 #tmHatch button{margin-top:16px;font-family:'Heebo',sans-serif;font-weight:800;font-size:1.15rem;padding:12px 30px;border-radius:999px;border:none;background:linear-gradient(#F3C24E,#E2A72E);color:#2b2208;}
 @keyframes tpHatch{0%{transform:scale(.3) rotate(-20deg);}50%{transform:scale(1.25) rotate(10deg);}100%{transform:scale(1);}}
-#tmTower{position:fixed;left:8px;bottom:calc(52px + env(safe-area-inset-bottom,0px));z-index:61;pointer-events:none;width:58px;display:flex;flex-direction:column-reverse;align-items:center;gap:2px;opacity:0;transition:opacity .3s;}
+#tmTower{position:fixed;left:8px;bottom:calc(52px + env(safe-area-inset-bottom,0px));z-index:61;pointer-events:none;width:62px;height:212px;display:flex;flex-direction:column-reverse;align-items:center;justify-content:flex-start;gap:2px;opacity:0;transition:opacity .3s;}
 #tmTower.show{opacity:1;}
-#tmTower .fl{width:46px;height:9px;border-radius:3px;background:#B7A27A;border:1px solid #8E7A55;box-sizing:border-box;}
+#tmTower .fl{width:46px;height:9px;border-radius:3px;background:#B7A27A;border:1px solid #8E7A55;box-sizing:border-box;flex:none;}
 #tmTower .fl:nth-child(odd){background:#C9B48A;}
 #tmTower .fl.new{animation:tpFl .35s ease;}
 #tmTower.wob{animation:tpWob .6s ease;}
-#tmTower .tp{font-size:1.5rem;line-height:1;}
-#tmTower .cnt{font-family:'Heebo',sans-serif;font-weight:900;font-size:.8rem;color:#fff;background:#6B5A3A;border-radius:999px;padding:1px 8px;margin-top:3px;}
+#tmTower.down .cnt{background:#C0392B;}
+#tmTower .tp{font-size:1.5rem;line-height:1;flex:none;}
+#tmTower .big{line-height:1;transition:font-size .35s ease;flex:none;}
+#tmTower .trk{position:relative;width:12px;flex:1;border-radius:6px;background:rgba(107,90,58,.22);margin-bottom:2px;}
+#tmTower .trk i{position:absolute;left:0;right:0;bottom:0;border-radius:6px;background:linear-gradient(#8ecbff,#3b82f6);transition:height .35s ease;}
+#tmTower .rk{position:absolute;left:50%;transform:translate(-50%,50%);font-size:1.6rem;line-height:1;transition:bottom .35s ease;}
+#tmTower .cnt{font-family:'Heebo',sans-serif;font-weight:900;font-size:.8rem;color:#fff;background:#6B5A3A;border-radius:999px;padding:1px 8px;margin-top:3px;flex:none;transition:background .3s;}
 @keyframes tpFl{0%{transform:translateY(-14px);opacity:0;}100%{transform:none;opacity:1;}}
 @keyframes tpWob{25%{transform:rotate(-7deg);}50%{transform:rotate(6deg);}75%{transform:rotate(-3deg);}}
 .sh-it{display:flex;align-items:center;gap:10px;margin:8px 0;padding:10px 12px;border-radius:14px;background:#FFF;border:2px solid #F2C6D8;}
@@ -461,42 +466,54 @@ html.tm-dark .al-c,body.tm-dark .al-c{color:#2E2450;}
     return a+(b&&b!==a?' · '+b:'');
   }
 
-  /* ---------------- 🏰 מצב מגדל ---------------- */
-  const TW={armed:false,on:false,n:0,pid:null};
+  /* ---------------- 🌱 משהו שגדל בכל תרגול (28.11.2026, ביקש ההורה) ----------------
+     במקום כפתור "מצב מגדל" נפרד: בכל סבב תרגול רגיל יש בפינה משהו שגדל.
+     נכונה = גדל צעד אחד, טעות = יורד צעד אחד. כל סבב — משהו אחר (מגדל / ילדה / עץ / טיל). */
+  const GOAL=16;
+  const THEMES=[
+    {k:'tower', go:'🏰 כל תשובה נכונה = עוד קומה. טעות = קומה נופלת', done:'🚩 מגדל שלם!', w:'בנית מגדל של'},
+    {k:'kid',   go:'🧒 כל תשובה נכונה = הילדה גדלה. טעות = קטנה קצת', done:'👩‍🎓 הילדה גדלה עד הסוף!', w:'הילדה גדלה'},
+    {k:'tree',  go:'🌱 כל תשובה נכונה = העץ גדל. טעות = עלה נושר', done:'🌳 עץ מלא בפירות!', w:'העץ גדל'},
+    {k:'rocket',go:'🚀 כל תשובה נכונה = הטיל עולה. טעות = יורד קצת', done:'🌙 הטיל הגיע לירח!', w:'הטיל עלה'}
+  ];
+  const TW={on:false,n:0,pid:null,t:0};
   function towEl(){ let t=$('tmTower'); if(!t){ t=document.createElement('div'); t.id='tmTower'; t.setAttribute('aria-hidden','true'); document.body.appendChild(t); } return t; }
+  const stage=(n,arr)=>arr[Math.min(arr.length-1,Math.floor(n*(arr.length-1)/GOAL))];
   function paintTower(newFl){
     const t=towEl();
     if(!TW.on){ t.classList.remove('show'); return; }
-    let h='<span class="cnt">'+TW.n+'/20</span>';
-    for(let i=0;i<Math.min(20,TW.n);i++) h+='<span class="fl'+(newFl&&i===TW.n-1?' new':'')+'"></span>';
-    h+='<span class="tp">'+(TW.n>=20?'🚩':'🏰')+'</span>';
+    const n=TW.n, T=THEMES[TW.t], full=n>=GOAL, cnt='<span class="cnt">'+n+'/'+GOAL+'</span>';
+    let h=cnt;
+    if(T.k==='tower'){
+      for(let i=0;i<n;i++) h+='<span class="fl'+(newFl&&i===n-1?' new':'')+'"></span>';
+      h+='<span class="tp">'+(full?'🚩':'🏰')+'</span>';
+    } else if(T.k==='kid'||T.k==='tree'){
+      const e=T.k==='kid'?(full?'👩‍🎓':stage(n,['👶','🧒','👧','👩'])):(full?'🌳':stage(n,['🌰','🌱','🌿','🪴','🌳']));
+      h+='<span class="big" style="font-size:'+(1.2+2.4*n/GOAL).toFixed(2)+'rem">'+e+(T.k==='tree'&&full?'🍎':'')+'</span>';
+    } else {
+      const pc=Math.round(100*n/GOAL);
+      h+='<span class="trk"><i style="height:'+pc+'%"></i><span class="rk" style="bottom:'+pc+'%">🚀</span></span><span class="tp">'+(full?'🌕':'🌙')+'</span>';
+    }
     t.innerHTML=h; t.classList.add('show');
   }
-  function towerArm(pid){ TW.armed=true; TW.on=false; TW.n=0; TW.pid=pid; toast('🏰 מצב מגדל! כל תשובה נכונה = קומה'); }
-  function towerOff(){ TW.armed=false; TW.on=false; TW.n=0; paintTower(); }
+  function towerStart(pid){
+    let i=0; try{ i=+(localStorage.getItem('tm_grow_i')||0)||0; localStorage.setItem('tm_grow_i',String(i+1)); }catch(e){}
+    TW.on=true; TW.n=0; TW.pid=pid; TW.t=i%THEMES.length; toast(THEMES[TW.t].go);
+  }
+  function towerOff(){ TW.on=false; TW.n=0; paintTower(); }
   function towerAns(ok){
-    if(!TW.armed&&!TW.on) return; if(curPid()!==TW.pid){ towerOff(); return; }
-    TW.on=true; TW.armed=false;
-    if(ok){ TW.n++; paintTower(true); if(TW.n===20){ confetti(); } }
-    else { paintTower(); const t=towEl(); t.classList.remove('wob'); void t.offsetWidth; t.classList.add('wob'); }
+    const pid=curPid(); if(!pid) return;
+    if(TW.on&&pid!==TW.pid) towerOff();
+    if(!TW.on) towerStart(pid);
+    const t=towEl();
+    if(ok){ const was=TW.n; TW.n=Math.min(GOAL,TW.n+1); t.classList.remove('down'); paintTower(TW.n>was); if(TW.n===GOAL&&was<GOAL) confetti(); }
+    else { TW.n=Math.max(0,TW.n-1); paintTower(); t.classList.remove('wob'); void t.offsetWidth; t.classList.add('wob','down'); }
   }
   function towerEnd(){
-    if(!TW.on) return; const n=TW.n;
-    toast(n>=20?'🚩 מגדל שלם! 20 קומות! 🏰':'🏰 בנית '+n+' קומות!'+(n>=15?' כמעט עד הדגל!':''),4500);
-    if(n>=20) confetti();
-    setTimeout(towerOff,4000); TW.on=false; TW.armed=false;
-  }
-  /* כפתור במסך החומר (בחינות מהצ׳אט) — ליד "✏️ לתרגל הכול" */
-  function towerBtns(){
-    const a=$('upAll'); if(a&&!$('tpTowUp')){ const b=document.createElement('button'); b.type='button'; b.className='tx-next sec'; b.id='tpTowUp'; b.textContent='🏰 מצב מגדל (אותן שאלות)';
-      b.onclick=()=>{ towerArm(curPid()); a.click(); }; a.after(b); }
-    /* בחינות חשבון/תורה הישנות: אריח בתוך "לתרגל" */
-    document.querySelectorAll('.tm3').forEach(box=>{
-      const tiles=box.parentNode&&box.parentNode.querySelector('.m-tiles'); if(!tiles||tiles.querySelector('.tp-tow')) return;
-      const t=document.createElement('button'); t.type='button'; t.className='m-tile tp-tow'+(tiles.querySelector('.m-tile.tm3-hide')?' tm3-hide':''); t.dataset.tmg='practice';
-      t.innerHTML='<span class="ic">🏰</span><b>מצב מגדל</b><span>בוחרות משחק — כל נכונה בונה קומה</span>';
-      t.onclick=()=>towerArm(curPid()); tiles.appendChild(t);
-    });
+    if(!TW.on) return; const n=TW.n, T=THEMES[TW.t];
+    toast(n>=GOAL?T.done:T.w+' '+n+' מתוך '+GOAL+'!'+(n>=GOAL-3?' כמעט עד הסוף!':''),4500);
+    if(n>=GOAL) confetti();
+    TW.on=false; setTimeout(()=>{ if(!TW.on) towerOff(); },4000);
   }
 
   /* ---------------- 💝 חנות ההורים ---------------- */
@@ -609,7 +626,7 @@ html.tm-dark .al-c,body.tm-dark .al-c{color:#2E2450;}
   albumTile=function(){ _albumTile(); try{ zooTile(); }catch(e){} try{ shopTile(); }catch(e){} };
   const _tr2=window.tRec;
   if(typeof _tr2==='function') window.tRec=function(game,it,ok){ try{ if(game!=='pre') towerAns(!!ok); }catch(e){} return _tr2.apply(this,arguments); };
-  new MutationObserver(()=>{ try{ towerBtns(); }catch(e){}
+  new MutationObserver(()=>{
     try{ const e2=[...document.querySelectorAll('.tx-end,.m-res')].find(x=>x.offsetParent!==null&&!x.dataset.tmTow); if(e2){ e2.dataset.tmTow='1'; towerEnd(); } }catch(e){} })
     .observe(document.body,{childList:true,subtree:true});
   if(typeof window.showHub==='function'){ const _sh2=window.showHub; window.showHub=function(){ towerOff(); return _sh2.apply(this,arguments); }; }
