@@ -11452,7 +11452,7 @@ html.tm-locked #tmNav .nv-kid{display:none !important;}
   const HOSTS={
     txOv:{back:['txBack']}, avOv:{back:['avBack']}, sgOv:{back:['sgBack']},
     wkOv:{back:['wkBack','wkClose'], home:['wkClose']}, tkOv:{back:['tkXX']},
-    klOv:{back:[]}, txParOv:{back:[]}, avParOv:{back:[]}, upParOv:{back:[]}, flParOv:{back:[]}, t3ParOv:{back:[]}
+    klOv:{back:[]}, txParOv:{back:[]}, avParOv:{back:[]}, upParOv:{back:[]}, flParOv:{back:[]}, t3ParOv:{back:[]}, errParOv:{back:[]}
   };
   const OTHERS=['parentOv','dictOv','mailOv','mcOv','rmOv'];
   const isOpen=el=>!!el&&el.classList.contains('show');
@@ -13033,7 +13033,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"aviv-torah1","pid
    ▶ להמשיך מאיפה שעצרתי · 🔄 יש עדכון · 🌙 מצב ערב · ⚑ נראה לי שיש פה טעות
    ================================================================ */
 (function(){
-  const TM_BUILD='202611282200';
+  const TM_BUILD='202611282300';
   window.TM_BUILD=TM_BUILD;
   const $=id=>document.getElementById(id);
   const lg=k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } };
@@ -13587,6 +13587,9 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"aviv-torah1","pid
   sub('pmis',L=>{ L.forEach(m=>{ if(m.pid) PM[m.pid]=m; }); ls('tm_pm',JSON.stringify(PM)); refreshHub(); refreshPar(); });
   const pmToday=pid=>{ const m=PM[pid]; return m&&m.day===dk()&&m.tp?m:null; };
   function pmItems(pid,m){
+    /* 28.11.2026: תרגול מהטעויות שההורה שלח (📕 הטעויות של הבנות) */
+    if(Array.isArray(m.keys)&&m.keys.length){ try{ const {list,byTp}=S().cards(pid), K=new Set(m.keys);
+      return shuf(list.filter(c=>K.has(c.key)).map(c=>({c,rv:1,opts:S().optsFor(c,byTp)}))).slice(0,12); }catch(e){ return []; } }
     const ex=actEx(pid).find(x=>x.id===m.ex); if(!ex) return [];
     let out=[];
     try{ out=(window.TM_MAP?TM_MAP.poolFor(pid,ex,m.tp):[]).map(q=>({c:{key:'pm'+q.q,q:q.q,c:q.c,tp:m.tp,ex:ex.id,g:'pm'},rv:0,opts:shuf(q.opts)})); }catch(e){}
@@ -13597,7 +13600,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"aviv-torah1","pid
   function startPm(){
     const P=prof(); if(!P) return; const m=pmToday(P.id); if(!m) return;
     const items=pmItems(P.id,m);
-    if(items.length<3){ /* אין עוד מספיק שאלות בנושא הזה — נכנסים לבחינה */
+    if(items.length<(m.keys?1:3)){ /* אין עוד מספיק שאלות בנושא הזה — נכנסים לבחינה */
       try{ enterExam(m.ex); }catch(e){} return; }
     S().run({title:'📌 משימה מאבא ואמא',items,game:'pm',back:S().close,onEnd:r=>{
       const nm=Object.assign({},m,{done:1,ok:r.ok,n:r.n,at2:Date.now()}); PM[P.id]=nm; ls('tm_pm',JSON.stringify(PM)); put('pmis/'+P.id,nm);
@@ -13788,7 +13791,7 @@ window.TM_UP_BUILTIN=(window.TM_UP_BUILTIN||[]).concat([{"id":"aviv-torah1","pid
     const anchor=$('txTiles')||hbx.querySelector('.hub-grid'); const put1=el=>{ if(anchor&&anchor.parentNode) anchor.before(el); else hbx.prepend(el); };
     const m=pmToday(pid);
     if(m&&!m.done){ const b=document.createElement('button'); b.type='button'; b.className='t3-tile'; b.id='t3Pm';
-      b.innerHTML='<span class="ic">📌</span><span style="flex:1">משימה מאבא ואמא<small>'+E(tpShow(m.tp))+' · 8 שאלות</small></span>'; b.onclick=startPm; put1(b); }
+      b.innerHTML='<span class="ic">📌</span><span style="flex:1">משימה מאבא ואמא<small>'+E(tpShow(m.tp))+' · '+(Array.isArray(m.keys)?Math.min(12,m.keys.length):8)+' שאלות</small></span>'; b.onclick=startPm; put1(b); }
   }
   if(typeof showHub==='function'){ const _sh=showHub; showHub=function(){ const r=_sh.apply(this,arguments); tiles(); setTimeout(tiles,340); return r; }; }
   window.addEventListener('tm-live',()=>{ refreshHub(); paintPodium(); });
@@ -17502,6 +17505,7 @@ html:has(#tmSj.show),html:has(#tmSj.show) body{overflow:hidden;}
 </script>
 <script src="tm-play.js"></script>
 <script src="tm-book.js"></script>
+<script src="tm-errs.js"></script>
 <script src="tm-tutor.js"></script>
 <script src="tm-tabs.js"></script>
 </body></html>
