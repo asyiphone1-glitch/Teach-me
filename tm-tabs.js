@@ -5,6 +5,8 @@
    - "בואי נלמד" (#ttGo) = כפתור חכם אחד שמחליף את הספירה לאחור (.cd-ban), "להמשיך ללמוד" (#tmResume)
      ו"שאלות שחוזרות" (#txRev): אם יש שאלות שחוזרות היום והבחינה לא מחר/היום — מתחילים בהן (פעם ביום), אחרת לבחינה.
    - לא אצל אבא (המסך שלו נשאר כמו שהיה).
+   28.11.2026 (ביקש ההורה): בלשונית "לומדת" אין יותר כפתור "בואי נלמד". למעלה מיד: המקצועות שיש להם בחינה,
+     עם התאריך והספירה לאחור — לוחצים על מקצוע ונכנסים לתפריט של הבחינה. "שאלות שחוזרות" נשאר כאריח קטן מתחת.
    - משווים el._h ולא innerHTML — אחרת MutationObserver נכנס ללולאה. */
 (function(){
   const $=id=>document.getElementById(id);
@@ -40,11 +42,20 @@
 '#ttGo small{display:block;font-size:1.02rem;font-weight:600;line-height:1.45;}'+
 '#ttGo small.rv{font-weight:800;}'+
 '#ttTitle{margin:6px 0 14px;font-family:"Heebo",sans-serif;font-size:1.7rem;font-weight:800;}'+
-'@media (prefers-reduced-motion: reduce){#ttGo{box-shadow:none;}}';
+'@media (prefers-reduced-motion: reduce){#ttGo{box-shadow:none;}}'+
+/* 28.11: בלשונית "לומדת" — המקצועות של הבחינות קודם, מיד אחרי "היי" */
+'body.tmT[data-tt="learn"] #hubBox{display:flex;flex-direction:column;}'+
+'body.tmT[data-tt="learn"] #hubBox > .sy-who{order:-6;}'+
+'body.tmT[data-tt="learn"] #hubBox > .hub-nav{order:-5;}'+
+'body.tmT[data-tt="learn"] #hubBox > .hub-hi{order:-4;}'+
+'body.tmT[data-tt="learn"] #hubBox > #ttTitle{order:-3;margin:4px 0 10px;}'+
+'body.tmT[data-tt="learn"] #hubBox > .hub-grid{order:-2;}'+
+'body.tmT #ttGo{display:none!important;}'+
+'.hub-sbtn .tt-dt{font-style:normal;font-size:.95rem;font-weight:700;opacity:.9;}';
   document.head.appendChild(css);
 
   const TABS=[
-    {k:'learn',n:'לומדת',t:'',svg:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'},
+    {k:'learn',n:'לומדת',t:'📅 הבחינות שלי',svg:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'},
     {k:'exams',n:'בחינות',t:'📅 הבחינות שלי',svg:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'},
     {k:'treasures',n:'אוצרות',t:'🎁 האוצרות שלי',svg:'<rect x="3" y="9" width="18" height="12" rx="1"/><path d="M2 9h20M12 9v12M12 9c-2-5-7-5-6-1M12 9c2-5 7-5 6-1"/>'},
     {k:'compete',n:'מתחרים',t:'🏆 מתחרים',svg:'<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 21h8"/>'}
@@ -53,12 +64,12 @@
 
   /* לאיזו לשונית שייך כל כרטיס. לא מוכר = "לומדת" — כדי ששום דבר חדש לא ייעלם */
   const BY_ID={
-    tmEve:'learn', avTile:'learn', ttGo:'learn',
-    tmResume:'x', hbMoreBtn:'x', txRev:'x', myBoard:'x',
+    tmEve:'learn', avTile:'learn', ttGo:'x', txRev:'learn',
+    tmResume:'x', hbMoreBtn:'x', myBoard:'x',
     tmMock:'exams', msTile:'exams', txUp:'exams',
     t3Av:'treasures', tpAlb:'treasures', tpZoo:'treasures', tpShop:'treasures', tpEgg:'treasures',
     txDuel:'compete', wkHubBtn:'compete', pdCard:'compete',
-    ttTitle:'exams treasures compete'
+    ttTitle:'learn exams treasures compete'
   };
   const CONTAINERS={txTiles:1, tmPlay:1, hbMore:1, hbMoreRow:1};
   function tabOf(el){
@@ -69,7 +80,8 @@
     if(el.tagName==='H2') return 'x';   /* "מה לומדת היום?" — הכפתור החכם עונה על זה */
     if(c.contains('cd-ban')) return 'x';
     if(c.contains('st-bar')) return 'learn';
-    if(c.contains('hub-grid')||c.contains('hub-arch')) return 'exams';
+    if(c.contains('hub-grid')) return 'learn exams';
+    if(c.contains('hub-arch')) return 'exams';
     if(c.contains('hub-foot')) return 'x';
     if(c.contains('tp-chip')){
       if(c.contains('egg')) return 'treasures';
@@ -136,6 +148,20 @@
     if(t._h!==s){ t._h=s; t.textContent=s; }
   }
 
+  /* 28.11: תאריך הבחינה על כל כפתור מקצוע ("יום ב׳ 30.11") */
+  function dates(box){
+    let D=null; try{ D=(typeof DATES!=='undefined')?DATES:null; }catch(e){}
+    if(!D||typeof fmtDate!=='function') return;
+    box.querySelectorAll('.hub-grid .hub-sbtn[data-ex]').forEach(b=>{
+      if(b.closest('details')) return;
+      const v=D[b.dataset.ex]; const t=v?fmtDate(v):'';
+      let i=b.querySelector(':scope > .tt-dt');
+      if(!t){ if(i) i.remove(); return; }
+      if(!i){ i=document.createElement('i'); i.className='tt-dt'; const chip=b.querySelector(':scope > .cd-chip'); if(chip) chip.before(i); else b.appendChild(i); }
+      if(i._h!==t){ i._h=t; i.textContent='📅 '+t; }
+    });
+  }
+
   /* ---------- הסרגל למטה ---------- */
   function nav(){
     const hub=$('hub'); if(!hub) return;
@@ -164,7 +190,7 @@
     if(P.id!==lastPid){ lastPid=P.id; cur='learn'; }
     if(document.body.dataset.tt!==cur) document.body.dataset.tt=cur;
     busy=true;
-    try{ smart(box); title(box); tagAll(box); nav(); }catch(e){ try{ console.warn('tm-tabs',e); }catch(_){} }
+    try{ smart(box); title(box); dates(box); tagAll(box); nav(); }catch(e){ try{ console.warn('tm-tabs',e); }catch(_){} }
     busy=false;
   }
   let qd=0;
